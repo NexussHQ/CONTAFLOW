@@ -1,0 +1,79 @@
+# dependencies
+/node_modules
+/.pnp
+.pnp.js
+.yarn/
+.yarn-integrity
+
+# testing
+/coverage
+.nyc_output
+
+# next.js
+/.next/
+/out/
+.swc/
+
+# production
+/build
+/dist
+
+# misc
+.DS_Store
+*.pem
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.cache/
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# local env files
+.env*.local
+.env
+.env.development
+.env.production
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# logs
+logs
+*.log
+lerna-debug.log*
+
+# backups (database backups)
+backups/
+
+# docker
+.dockerignore
+Dockerfile.prod
+
+# Supabase local
+supabase/.temp/
+supabase/logs/
+supabase/.branches/
+
+# Temporary directories
+-p/
+tmp/
+temp/
+*.tmp
+
+# OS files
+Thumbs.db
+desktop.ini
+
+# Editor backup files
+*.bak
+*.backup

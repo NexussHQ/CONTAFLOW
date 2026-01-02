@@ -1,0 +1,689 @@
+# 🎯 PROMPT MAESTRO PARA CONSTRUIR "EduGenio Ecuador"
+
+A continuación te presento el prompt optimizado, estructurado en secciones claras para que el modelo GLM 4.7 pueda ejecutarlo de forma progresiva y modular:
+
+---
+
+## 📋 PROMPT PRINCIPAL (Copia esto en Kilo Code)
+
+```markdown
+# PROYECTO: EduGenio Ecuador - Plataforma de Tutoría Inteligente
+
+## 🎯 CONTEXTO Y OBJETIVO
+Eres un desarrollador senior especializado en Next.js 14 y Supabase. Tu misión es construir "EduGenio Ecuador", una aplicación web educativa minimalista que actúa como tutor virtual personalizado para estudiantes ecuatorianos de educación básica y bachillerato.
+
+La app combina una IA con personalidad de psicólogo educativo/pedagogo con el currículo oficial ecuatoriano, ofreciendo acompañamiento académico adaptado a cada nivel educativo.
+
+---
+
+## 🛠️ STACK TECNOLÓGICO (OBLIGATORIO - NO MODIFICAR)
+
+```yaml
+Frontend:
+  - Framework: Next.js 14 (App Router)
+  - Lenguaje: TypeScript (strict mode)
+  - Estilos: Tailwind CSS v3.4+
+  - Componentes: shadcn/ui
+  - Iconos: lucide-react
+  - Animaciones: framer-motion (sutiles)
+  - Formularios: react-hook-form + zod
+
+Backend:
+  - BaaS: Supabase
+  - Database: PostgreSQL
+  - Auth: Supabase Auth
+  - Storage: Supabase Storage
+
+Deploy:
+  - Docker con Dockerfile multi-stage optimizado
+  - Compatible con Coolify/Dokploy
+```
+
+---
+
+## 📁 ESTRUCTURA DE PROYECTO
+
+Genera esta estructura exacta:
+
+```
+edugenio-ecuador/
+├── src/
+│   ├── app/
+│   │   ├── (auth)/
+│   │   │   ├── login/
+│   │   │   │   └── page.tsx
+│   │   │   ├── registro/
+│   │   │   │   └── page.tsx
+│   │   │   └── layout.tsx
+│   │   ├── (dashboard)/
+│   │   │   ├── inicio/
+│   │   │   │   └── page.tsx
+│   │   │   ├── estudiar/
+│   │   │   │   └── page.tsx
+│   │   │   ├── progreso/
+│   │   │   │   └── page.tsx
+│   │   │   ├── perfil/
+│   │   │   │   └── page.tsx
+│   │   │   └── layout.tsx
+│   │   ├── api/
+│   │   │   ├── chat/
+│   │   │   │   └── route.ts
+│   │   │   └── progreso/
+│   │   │       └── route.ts
+│   │   ├── globals.css
+│   │   ├── layout.tsx
+│   │   └── page.tsx
+│   ├── components/
+│   │   ├── ui/           # shadcn components
+│   │   ├── chat/
+│   │   │   ├── chat-container.tsx
+│   │   │   ├── message-bubble.tsx
+│   │   │   └── chat-input.tsx
+│   │   ├── dashboard/
+│   │   │   ├── sidebar.tsx
+│   │   │   ├── header.tsx
+│   │   │   ├── materia-card.tsx
+│   │   │   └── progreso-card.tsx
+│   │   ├── shared/
+│   │   │   ├── logo.tsx
+│   │   │   ├── avatar-estudiante.tsx
+│   │   │   └── loading-spinner.tsx
+│   │   └── forms/
+│   │       ├── login-form.tsx
+│   │       ├── registro-form.tsx
+│   │       └── perfil-estudiante-form.tsx
+│   ├── lib/
+│   │   ├── supabase/
+│   │   │   ├── client.ts
+│   │   │   ├── server.ts
+│   │   │   └── middleware.ts
+│   │   ├── utils.ts
+│   │   ├── constants.ts
+│   │   └── validations.ts
+│   ├── hooks/
+│   │   ├── use-auth.ts
+│   │   ├── use-chat.ts
+│   │   └── use-progreso.ts
+│   ├── types/
+│   │   └── index.ts
+│   └── stores/
+│       └── estudiante-store.ts
+├── supabase/
+│   └── migrations/
+│       └── 001_initial_schema.sql
+├── public/
+│   └── avatars/
+├── .env.example
+├── .env.local
+├── Dockerfile
+├── docker-compose.yml
+├── next.config.js
+├── tailwind.config.ts
+├── tsconfig.json
+└── package.json
+```
+
+---
+
+## 🗄️ ESQUEMA DE BASE DE DATOS (Supabase/PostgreSQL)
+
+Ejecuta esta migración en `supabase/migrations/001_initial_schema.sql`:
+
+```sql
+-- Habilitar extensiones necesarias
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- ENUM para niveles educativos
+CREATE TYPE nivel_educativo AS ENUM (
+  'basica_elemental',
+  'basica_media', 
+  'basica_superior',
+  'bachillerato'
+);
+
+-- ENUM para grados
+CREATE TYPE grado_escolar AS ENUM (
+  '2do_egb', '3ro_egb', '4to_egb',
+  '5to_egb', '6to_egb', '7mo_egb',
+  '8vo_egb', '9no_egb', '10mo_egb',
+  '1ro_bgu', '2do_bgu', '3ro_bgu'
+);
+
+-- Tabla: Perfiles de usuario (padres)
+CREATE TABLE perfiles (
+  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  nombre_completo TEXT NOT NULL,
+  email TEXT UNIQUE NOT NULL,
+  avatar_url TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Tabla: Estudiantes (hijos)
+CREATE TABLE estudiantes (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  perfil_id UUID REFERENCES perfiles(id) ON DELETE CASCADE,
+  nombre TEXT NOT NULL,
+  edad INTEGER CHECK (edad >= 5 AND edad <= 18),
+  grado grado_escolar NOT NULL,
+  nivel nivel_educativo NOT NULL,
+  avatar_id TEXT DEFAULT 'avatar_1',
+  estrellas_totales INTEGER DEFAULT 0,
+  racha_dias INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Tabla: Asignaturas
+CREATE TABLE asignaturas (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  nombre TEXT NOT NULL,
+  icono TEXT NOT NULL,
+  color TEXT NOT NULL,
+  descripcion TEXT,
+  orden INTEGER DEFAULT 0
+);
+
+-- Tabla: Bloques curriculares
+CREATE TABLE bloques_curriculares (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  asignatura_id UUID REFERENCES asignaturas(id) ON DELETE CASCADE,
+  grado grado_escolar NOT NULL,
+  titulo TEXT NOT NULL,
+  descripcion TEXT,
+  contenido_base TEXT,
+  orden INTEGER DEFAULT 0
+);
+
+-- Tabla: Progreso del estudiante
+CREATE TABLE progreso (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  estudiante_id UUID REFERENCES estudiantes(id) ON DELETE CASCADE,
+  bloque_id UUID REFERENCES bloques_curriculares(id) ON DELETE CASCADE,
+  completado BOOLEAN DEFAULT FALSE,
+  estrellas_ganadas INTEGER DEFAULT 0 CHECK (estrellas_ganadas <= 3),
+  tiempo_estudio INTEGER DEFAULT 0,
+  ultima_sesion TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(estudiante_id, bloque_id)
+);
+
+-- Tabla: Historial de chat
+CREATE TABLE historial_chat (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  estudiante_id UUID REFERENCES estudiantes(id) ON DELETE CASCADE,
+  bloque_id UUID REFERENCES bloques_curriculares(id),
+  rol TEXT NOT NULL CHECK (rol IN ('user', 'assistant')),
+  mensaje TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Índices para rendimiento
+CREATE INDEX idx_estudiantes_perfil ON estudiantes(perfil_id);
+CREATE INDEX idx_bloques_grado ON bloques_curriculares(grado);
+CREATE INDEX idx_progreso_estudiante ON progreso(estudiante_id);
+CREATE INDEX idx_chat_estudiante ON historial_chat(estudiante_id);
+
+-- RLS (Row Level Security)
+ALTER TABLE perfiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE estudiantes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE progreso ENABLE ROW LEVEL SECURITY;
+ALTER TABLE historial_chat ENABLE ROW LEVEL SECURITY;
+
+-- Políticas RLS
+CREATE POLICY "Usuarios ven su propio perfil" ON perfiles
+  FOR ALL USING (auth.uid() = id);
+
+CREATE POLICY "Usuarios ven sus estudiantes" ON estudiantes
+  FOR ALL USING (perfil_id = auth.uid());
+
+CREATE POLICY "Usuarios ven progreso de sus estudiantes" ON progreso
+  FOR ALL USING (
+    estudiante_id IN (
+      SELECT id FROM estudiantes WHERE perfil_id = auth.uid()
+    )
+  );
+
+CREATE POLICY "Usuarios ven chat de sus estudiantes" ON historial_chat
+  FOR ALL USING (
+    estudiante_id IN (
+      SELECT id FROM estudiantes WHERE perfil_id = auth.uid()
+    )
+  );
+
+-- Datos iniciales: Asignaturas
+INSERT INTO asignaturas (nombre, icono, color, descripcion, orden) VALUES
+  ('Matemáticas', 'calculator', '#3B82F6', 'Números, operaciones y geometría', 1),
+  ('Lengua y Literatura', 'book-open', '#10B981', 'Lectura, escritura y comunicación', 2),
+  ('Ciencias Naturales', 'flask-conical', '#8B5CF6', 'Naturaleza y medio ambiente', 3),
+  ('Estudios Sociales', 'globe', '#F59E0B', 'Historia, geografía y civismo', 4);
+```
+
+---
+
+## 🎨 SISTEMA DE DISEÑO
+
+### Paleta de Colores (Definir en tailwind.config.ts)
+
+```typescript
+// tailwind.config.ts
+import type { Config } from "tailwindcss"
+
+const config: Config = {
+  darkMode: ["class"],
+  content: ["./src/**/*.{ts,tsx}"],
+  theme: {
+    extend: {
+      colors: {
+        // Colores principales
+        primary: {
+          50: '#EEF2FF',
+          100: '#E0E7FF',
+          500: '#6366F1',
+          600: '#4F46E5',
+          700: '#4338CA',
+        },
+        // Acentos para gamificación
+        accent: {
+          yellow: '#FBBF24',  // Estrellas
+          green: '#10B981',   // Éxito
+          orange: '#F97316',  // Racha
+        },
+        // Neutros cálidos
+        warm: {
+          50: '#FEFCE8',
+          100: '#FEF9C3',
+          900: '#1C1917',
+        }
+      },
+      fontFamily: {
+        sans: ['var(--font-inter)', 'system-ui', 'sans-serif'],
+        display: ['var(--font-outfit)', 'system-ui', 'sans-serif'],
+      },
+      borderRadius: {
+        'xl': '1rem',
+        '2xl': '1.5rem',
+        '3xl': '2rem',
+      },
+      animation: {
+        'float': 'float 3s ease-in-out infinite',
+        'pulse-soft': 'pulse-soft 2s ease-in-out infinite',
+      },
+      keyframes: {
+        float: {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-10px)' },
+        },
+        'pulse-soft': {
+          '0%, 100%': { opacity: '1' },
+          '50%': { opacity: '0.7' },
+        },
+      },
+    },
+  },
+  plugins: [require("tailwindcss-animate")],
+}
+
+export default config
+```
+
+### Principios de Diseño Visual
+
+1. **Minimalismo Cálido**: Fondos claros (slate-50/white), bordes sutiles, sombras suaves
+2. **Espaciado Generoso**: Padding mínimo de 4-6 en cards, gaps de 4-6 en layouts
+3. **Tipografía Clara**: 
+   - Títulos: font-display (Outfit) semi-bold
+   - Cuerpo: font-sans (Inter) regular
+4. **Esquinas Redondeadas**: rounded-2xl para cards principales, rounded-xl para botones
+5. **Iconografía**: Lucide React con tamaño consistente (20-24px)
+6. **Animaciones**: Framer Motion sutil (duration 0.2-0.3s, ease-out)
+
+---
+
+## 🧩 COMPONENTES PRINCIPALES
+
+### 1. Layout del Dashboard (src/app/(dashboard)/layout.tsx)
+
+```tsx
+"use client"
+
+import { Sidebar } from "@/components/dashboard/sidebar"
+import { Header } from "@/components/dashboard/header"
+import { motion } from "framer-motion"
+
+export default function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return (
+    <div className="min-h-screen bg-slate-50">
+      <Sidebar />
+      <div className="lg:pl-72">
+        <Header />
+        <motion.main
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="p-6 lg:p-8"
+        >
+          {children}
+        </motion.main>
+      </div>
+    </div>
+  )
+}
+```
+
+### 2. Sidebar Minimalista (src/components/dashboard/sidebar.tsx)
+
+Implementa un sidebar con:
+- Logo EduGenio en la parte superior
+- Avatar del estudiante activo con nombre y grado
+- Navegación: Inicio, Estudiar, Progreso, Perfil
+- Contador de estrellas y racha de días
+- Iconos Lucide: Home, BookOpen, BarChart3, User, Star, Flame
+
+### 3. Chat Container (src/components/chat/chat-container.tsx)
+
+Interfaz de chat con la IA tutora:
+- Mensajes con burbujas diferenciadas (usuario vs IA)
+- Avatar del tutor IA (emoji 🧑‍🏫 o icono)
+- Input con placeholder contextual
+- Indicador de "escribiendo..."
+- Scroll automático a nuevos mensajes
+
+### 4. Materia Card (src/components/dashboard/materia-card.tsx)
+
+Cards para cada asignatura:
+- Icono y nombre de la materia
+- Barra de progreso circular o lineal
+- Número de bloques completados
+- Animación hover sutil (scale 1.02)
+
+---
+
+## 🔌 API ROUTES
+
+### Chat con IA (src/app/api/chat/route.ts)
+
+```typescript
+import { NextRequest, NextResponse } from "next/server"
+import { createServerClient } from "@/lib/supabase/server"
+
+// System prompt del tutor IA
+const SYSTEM_PROMPT = `Eres "Profe Edu", un Psicólogo Educativo y Pedagogo ecuatoriano con 30 años de experiencia. Tu metodología combina refuerzo positivo y aprendizaje guiado (Socrático).
+
+REGLAS ESTRICTAS:
+1. NUNCA des la respuesta directa. Guía con preguntas.
+2. Usa un tono cálido, paciente y entusiasta.
+3. Adapta tu lenguaje a la edad del estudiante.
+4. Si el estudiante falla, responde: "¡Buen intento! Veamos esto de otra forma..."
+5. Celebra cada logro: "¡Excelente! ¡Eso merece una estrella! ⭐"
+6. Usa ejemplos cotidianos de Ecuador cuando sea posible.
+7. Mantén respuestas breves (máximo 3 párrafos).
+8. Incluye emojis ocasionales para hacer la conversación amigable.
+
+CONTEXTO DEL ESTUDIANTE:
+- Nombre: {{nombre}}
+- Edad: {{edad}} años
+- Grado: {{grado}}
+- Tema actual: {{tema}}
+
+Inicia siempre saludando por el nombre y preguntando cómo se siente hoy.`
+
+export async function POST(request: NextRequest) {
+  try {
+    const supabase = createServerClient()
+    const { mensaje, estudiante_id, bloque_id } = await request.json()
+
+    // Obtener datos del estudiante
+    const { data: estudiante } = await supabase
+      .from("estudiantes")
+      .select("nombre, edad, grado")
+      .eq("id", estudiante_id)
+      .single()
+
+    // Obtener contexto del bloque
+    const { data: bloque } = await supabase
+      .from("bloques_curriculares")
+      .select("titulo, contenido_base")
+      .eq("id", bloque_id)
+      .single()
+
+    // Obtener historial de chat (últimos 10 mensajes)
+    const { data: historial } = await supabase
+      .from("historial_chat")
+      .select("rol, mensaje")
+      .eq("estudiante_id", estudiante_id)
+      .eq("bloque_id", bloque_id)
+      .order("created_at", { ascending: true })
+      .limit(10)
+
+    // Construir prompt personalizado
+    const promptPersonalizado = SYSTEM_PROMPT
+      .replace("{{nombre}}", estudiante?.nombre || "Estudiante")
+      .replace("{{edad}}", String(estudiante?.edad || 10))
+      .replace("{{grado}}", estudiante?.grado || "")
+      .replace("{{tema}}", bloque?.titulo || "tema general")
+
+    // Aquí integrarías tu proveedor de IA preferido
+    // Por ahora, retornamos estructura de ejemplo
+    
+    // Guardar mensaje del usuario
+    await supabase.from("historial_chat").insert({
+      estudiante_id,
+      bloque_id,
+      rol: "user",
+      mensaje,
+    })
+
+    // TODO: Llamar a API de IA (OpenAI, Anthropic, etc.)
+    const respuestaIA = "¡Hola! Soy el Profe Edu. ¿Cómo te sientes hoy?"
+
+    // Guardar respuesta de IA
+    await supabase.from("historial_chat").insert({
+      estudiante_id,
+      bloque_id,
+      rol: "assistant",
+      mensaje: respuestaIA,
+    })
+
+    return NextResponse.json({ 
+      respuesta: respuestaIA,
+      success: true 
+    })
+
+  } catch (error) {
+    console.error("Error en chat:", error)
+    return NextResponse.json(
+      { error: "Error procesando mensaje" },
+      { status: 500 }
+    )
+  }
+}
+```
+
+---
+
+## 🐳 DOCKER CONFIGURATION
+
+### Dockerfile (Multi-stage optimizado)
+
+```dockerfile
+# Etapa 1: Dependencias
+FROM node:20-alpine AS deps
+RUN apk add --no-cache libc6-compat
+WORKDIR /app
+COPY package.json package-lock.json* ./
+RUN npm ci --only=production
+
+# Etapa 2: Build
+FROM node:20-alpine AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+ENV NEXT_TELEMETRY_DISABLED 1
+RUN npm run build
+
+# Etapa 3: Runner
+FROM node:20-alpine AS runner
+WORKDIR /app
+ENV NODE_ENV production
+ENV NEXT_TELEMETRY_DISABLED 1
+
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+
+COPY --from=builder /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+USER nextjs
+EXPOSE 3000
+ENV PORT 3000
+ENV HOSTNAME "0.0.0.0"
+
+CMD ["node", "server.js"]
+```
+
+### docker-compose.yml
+
+```yaml
+version: '3.8'
+
+services:
+  edugenio:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
+      - NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+    restart: unless-stopped
+```
+
+---
+
+## 📱 PÁGINAS PRINCIPALES A IMPLEMENTAR
+
+### 1. Landing Page (src/app/page.tsx)
+- Hero con ilustración educativa minimalista
+- Propuesta de valor: "Tu tutor personal que conoce el currículo ecuatoriano"
+- CTA: "Comenzar gratis"
+- Testimonios (placeholder)
+- Footer mínimo
+
+### 2. Dashboard Inicio (src/app/(dashboard)/inicio/page.tsx)
+- Saludo personalizado: "¡Hola, {nombre}! 👋"
+- Stats rápidos: Estrellas, Racha, Tiempo de estudio
+- Progreso general (barra)
+- Grid de 4 materias (Cards)
+- "Continuar donde dejaste" (último bloque)
+
+### 3. Estudiar (src/app/(dashboard)/estudiar/page.tsx)
+- Selector de materia (tabs o cards)
+- Lista de bloques curriculares del grado actual
+- Estado de cada bloque (completado/en progreso/pendiente)
+- Al seleccionar un bloque: abre modal/página con el chat
+
+### 4. Progreso (src/app/(dashboard)/progreso/page.tsx)
+- Gráfico simple de estrellas por semana
+- Lista de logros desbloqueados
+- Estadísticas por materia
+- Historial de sesiones recientes
+
+### 5. Perfil (src/app/(dashboard)/perfil/page.tsx)
+- Información del estudiante (editable)
+- Selector de avatar
+- Cambiar grado escolar
+- Cerrar sesión
+
+---
+
+## ✅ FUNCIONALIDADES CORE (NO AGREGAR MÁS)
+
+1. **Autenticación**: Login/Registro con email (Supabase Auth)
+2. **Gestión de Estudiantes**: CRUD de perfiles de hijos
+3. **Navegación Curricular**: Ver materias y bloques por grado
+4. **Chat con IA Tutora**: Conversación contextualizada
+5. **Sistema de Progreso**: Estrellas, completado, racha
+6. **Persistencia**: Historial de chat guardado
+
+---
+
+## 🚀 ORDEN DE IMPLEMENTACIÓN
+
+Desarrolla en este orden exacto:
+
+1. `Inicializar proyecto Next.js con todas las dependencias`
+2. `Configurar Supabase client y types`
+3. `Ejecutar migración de base de datos`
+4. `Implementar autenticación (login/registro)`
+5. `Crear layout del dashboard y sidebar`
+6. `Página de inicio con datos mock`
+7. `Página de estudiar con lista de bloques`
+8. `Componente de chat funcional`
+9. `API route de chat con system prompt`
+10. `Página de progreso`
+11. `Página de perfil`
+12. `Docker configuration`
+13. `Estilos finales y animaciones`
+
+---
+
+## ⚠️ RESTRICCIONES IMPORTANTES
+
+- NO uses bibliotecas adicionales fuera del stack definido
+- NO implementes features no listadas (pagos, notificaciones, etc.)
+- NO uses CSS-in-JS (solo Tailwind)
+- NO crees más de 4 niveles de anidación en carpetas
+- SÍ usa Server Components donde sea posible
+- SÍ implementa loading states con Suspense
+- SÍ usa TypeScript strict en todo el código
+```
+
+---
+
+## 🎬 INSTRUCCIONES DE USO EN KILO CODE
+
+### Paso 1: Inicialización
+Copia el prompt completo y pégalo en Kilo Code. Indica:
+
+```
+Comienza implementando el paso 1: Inicializar proyecto Next.js con todas las dependencias del stack definido. Genera el package.json completo y los comandos de instalación.
+```
+
+### Paso 2: Desarrollo Iterativo
+Después de cada respuesta, continúa con:
+
+```
+Ahora implementa el paso [N]: [descripción del paso]
+```
+
+### Paso 3: Ajustes
+Si necesitas modificaciones:
+
+```
+Modifica el componente [nombre] para [cambio específico], manteniendo el estilo minimalista y el stack definido.
+```
+
+---
+
+## 📝 NOTAS FINALES
+
+| Aspecto | Decisión |
+|---------|----------|
+| **Complejidad** | Reducida a 5 funcionalidades core |
+| **Páginas** | Solo 6 páginas (landing + 5 dashboard) |
+| **Base de datos** | 6 tablas esenciales |
+| **Autenticación** | Solo email (no OAuth por simplicidad) |
+| **IA** | Preparado para cualquier proveedor vía API route |
+| **Gamificación** | Mínima: estrellas + racha |
+
+---
+
+Este prompt está optimizado para que el modelo GLM 4.7 pueda ejecutarlo de forma incremental sin perderse en complejidad innecesaria. Cada sección es autocontenida y puede implementarse de forma independiente.
