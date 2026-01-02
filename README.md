@@ -9,32 +9,105 @@ CRM minimalista para profesionales de servicios (contadores, abogados, consultor
 - **UI Components:** Shadcn/ui + Lucide React
 - **Animaciones:** Framer Motion
 - **Formularios:** React Hook Form + Zod
+- **Drag & Drop:** @hello-pangea/dnd
 - **QR:** qrcode.react
 - **Backend/DB:** Supabase (Auth + PostgreSQL + Storage)
 - **Deploy:** Docker → Coolify/Dokploy en VPS
 
-## 📋 Características
+## 📋 Características Principales
+
+### Dashboard "Focus Day"
+Pantalla principal con vista holística del negocio:
+- **Estadísticas en tiempo real**: Total de contactos, clientes, prospectos y tareas pendientes
+- **Tareas de Alta Prioridad**: Lista urgente de tareas que necesitan atención inmediata
+- **Tareas para Hoy**: Tareas vencidas o que deben completarse hoy
+- **Contactos Recientes**: Últimas fichas creadas
+- **Actividad Reciente**: Timeline con las últimas acciones registradas
+- **Acciones Rápidas**: Botones de acceso directo a funcionalidades principales
 
 ### Ficha Maestra (Corazón del sistema)
-- Campos fijos: ID, tipo (Prospecto/Cliente), nombre, RUC (13 dígitos Ecuador), teléfono, email
-- Campos personalizados: texto, fecha, número, lista, archivo (JSONB)
+Gestión unificada de clientes y prospectos:
+- **Campos fijos**: ID, tipo (Prospecto/Cliente), nombre, RUC (13 dígitos Ecuador), teléfono, email
+- **Campos personalizados**: texto, fecha, número, lista, archivo (almacenados en JSONB)
+- **Historial completo**: Timeline unificado tipo chat con todas las interacciones
+- **Vista detallada**: Información completa del contacto con todas sus interacciones
 
 ### Dos Módulos (Hemisferios)
 
 | Panel Ventas | Panel Post-Venta |
 |--------------|------------------|
 | Kanban: Por Contactar → Conversación → Propuesta → Ganado | Kanban: Onboarding → En Proceso → Por Facturar → Archivado |
-| Convertir prospecto → cliente automáticamente | Gestión operativa de servicios |
+| Conversión automática de prospecto a cliente | Gestión operativa de servicios |
+| Seguimiento de pipeline de ventas | Gestión de entregas y facturación |
 
-### Funcionalidades Clave
-- Kanban editable (añadir/renombrar/reordenar columnas)
-- Vista "Focus Day" (prioridades del día)
-- Historial unificado tipo timeline/chat
-- Importación/exportación CSV/XLSX
-- Botón maestro de voz (IA voice-to-action)
+### Gestión de Tareas Avanzada
+Sistema completo de gestión de tareas:
+- **Tareas con subtareas**: División de grandes tareas en pasos más pequeños
+- **Prioridades**: Alta, normal (con indicadores visuales)
+- **Fechas de vencimiento**: Con alertas de vencimiento
+- **Vista calendario**: Visualización temporal de tareas
+- **Estados**: Pendiente, completada (con registro de fecha de completion)
+- **Asociación a fichas**: Cada tarea puede estar vinculada a un contacto
+- **Progress tracking**: Indicador de progreso basado en subtareas completadas
+
+### Kanban Interactivo
+Tableros visuales de gestión:
+- **Drag & Drop**: Arrastrar y soltar tarjetas entre columnas
+- **Columnas editables**: Añadir, renombrar y reordenar columnas
+- **Colores personalizables**: Cada columna puede tener su color distintivo
+- **Contadores de fichas**: Visualización del número de fichas por columna
+- **Alertas de etapa**: Indicadores visuales en etapas clave (ej. "Ganado")
+- **Animaciones suaves**: Transiciones fluidas con Framer Motion
+
+### Timeline Unificado
+Historial completo de interacciones:
+- **Múltiples tipos de eventos**: Notas, llamadas, emails, reuniones, tareas, eventos de sistema
+- **Cronología inversa**: Eventos más recientes primero
+- **Asociación a fichas**: Cada evento está vinculado a un contacto
+- **Iconos distintivos**: Emojis para identificar rápidamente el tipo de evento
+- **Registro automático**: El sistema registra automáticamente acciones importantes
+
+### Importación/Exportación de Datos
+Flexibilidad en la gestión de datos:
+- **Importación CSV**: Importar contactos masivamente con mapeo de columnas
+- **Exportación CSV**: Exportar todas las fichas en formato CSV
+- **Validación de datos**: Verificación automática durante importación
+- **Mapeo flexible**: Asignar columnas del CSV a campos del sistema
+- **Reportes**: Notificación del número de contactos importados exitosamente
+
+### Búsqueda y Filtros
+Localización rápida de información:
+- **Búsqueda global**: Buscar por nombre, email, teléfono o RUC
+- **Búsqueda instantánea**: Resultados en tiempo real mientras se escribe
+- **Filtros por tipo**: Filtrar entre prospectos y clientes
+- **Ordenamiento**: Ordenar por fecha de creación u otros criterios
+
+### Comandos de Voz
+Control hands-free del sistema:
+- **Crear ficha**: "nueva ficha [nombre]"
+- **Añadir nota**: "nota [texto]"
+- **Mover en kanban**: "mover a [etapa]"
+- **Convertir a cliente**: "convertir a cliente"
+- **Crear tarea**: "tarea [descripción]"
+- **Registrar llamada**: "llamar a [nombre]"
+- **Añadir etiqueta**: "etiqueta [nombre]"
+
+### UI/UX Avanzada
+Experiencia de usuario optimizada:
+- **Modo claro/oscuro**: Toggle de tema con persistencia
+- **Diseño responsivo**: Optimizado para móvil, tablet y desktop
+- **Animaciones fluidas**: Transiciones suaves en todas las interacciones
+- **Loading skeletons**: Indicadores de carga elegantes
+- **Notificaciones toast**: Feedback instantáneo de acciones
+- **Navegación intuitiva**: Menú lateral y móvil adaptativo
+- **Menú de búsqueda rápida**: Command palette para acceso rápido a funcionalidades
 
 ### Tipos de Relación (Badges)
-- 🔴 Lead | 🟢 Cliente | 🔵 Socio | 🟣 Colega
+Clasificación de contactos:
+- 🔴 **Lead** - Prospecto inicial
+- 🟢 **Cliente** - Cliente activo
+- 🔵 **Socio** - Socio del negocio
+- 🟣 **Colega** - Colega o colaborador
 
 ## 🛠️ Instalación y Configuración
 
@@ -49,7 +122,12 @@ npm install
 ### 2. Configurar Supabase
 
 1. Crear un proyecto en [Supabase](https://supabase.com)
-2. Ejecutar la migración SQL en `supabase/migrations/001_initial_schema.sql`
+2. Ejecutar las migraciones SQL en `supabase/migrations/` en orden:
+   - `001_initial_schema.sql`
+   - `002_complete_schema.sql`
+   - `003_fix_registration_with_email_confirmation.sql`
+   - `004_fix_registration_safe.sql`
+   - `005_add_subtasks.sql`
 3. Configurar RLS (Row Level Security) policies
 4. Copiar las credenciales a `.env.local`
 
@@ -76,31 +154,91 @@ contaflow/
 │   │   │   ├── login/
 │   │   │   └── register/
 │   │   ├── (dashboard)/       # Layout protegido
-│   │   │   ├── dashboard/     # Vista principal
-│   │   │   ├── ventas/        # Panel ventas
-│   │   │   ├── postventa/     # Panel post-venta
-│   │   │   └── ficha/         # Ficha maestra
-│   │   └── layout.tsx
+│   │   │   ├── dashboard/     # Vista principal (Focus Day)
+│   │   │   ├── ventas/        # Panel ventas (Kanban)
+│   │   │   ├── postventa/     # Panel post-venta (Kanban)
+│   │   │   ├── fichas/        # Listado de fichas
+│   │   │   ├── ficha/[id]/    # Detalle de ficha
+│   │   │   ├── tasks/         # Gestión de tareas
+│   │   │   └── ajustes/       # Ajustes del sistema
+│   │   ├── api/               # API Routes
+│   │   │   ├── auth/          # Endpoints de autenticación
+│   │   │   ├── fichas/        # CRUD de fichas
+│   │   │   │   ├── export/    # Exportar CSV
+│   │   │   │   └── import/    # Importar CSV
+│   │   │   └── ...
+│   │   ├── layout.tsx          # Layout raíz
+│   │   ├── page.tsx            # Landing page
+│   │   └── globals.css         # Estilos globales
 │   ├── components/
 │   │   ├── ui/                # Shadcn components
 │   │   ├── kanban/            # Componentes kanban
+│   │   │   ├── kanban.tsx               # Tablero principal
+│   │   │   ├── kanban-with-tasks.tsx     # Kanban con tareas
+│   │   │   └── column-editor.tsx        # Editor de columnas
 │   │   ├── ficha/             # Componentes ficha
+│   │   │   ├── ficha-card.tsx           # Tarjeta de ficha
+│   │   │   └── ficha-form.tsx           # Formulario de ficha
+│   │   ├── tasks/             # Componentes de tareas
+│   │   │   ├── task-form.tsx             # Formulario de tarea
+│   │   │   ├── task-item.tsx             # Item de tarea
+│   │   │   ├── task-item-with-subtasks.tsx  # Tarea con subtareas
+│   │   │   ├── subtask-item.tsx           # Item de subtarea
+│   │   │   ├── subtask-list.tsx           # Lista de subtareas
+│   │   │   ├── focus-day.tsx              # Vista focus day
+│   │   │   └── calendar-view.tsx         # Vista calendario
 │   │   ├── timeline/          # Historial unificado
+│   │   │   └── timeline.tsx              # Timeline de eventos
 │   │   ├── voice/             # Botón voz
+│   │   │   └── voice-button.tsx           # Reconocimiento de voz
+│   │   ├── import-export/      # Importación/Exportación
+│   │   │   └── import-modal.tsx           # Modal de importación
 │   │   └── shared/            # Componentes compartidos
+│   │       ├── dashboard-nav.tsx           # Navegación dashboard
+│   │       ├── mobile-nav.tsx              # Navegación móvil
+│   │       ├── mode-toggle.tsx             # Toggle tema
+│   │       ├── user-menu.tsx              # Menú usuario
+│   │       ├── search-command.tsx          # Command palette
+│   │       ├── confirm-dialog.tsx          # Diálogo de confirmación
+│   │       ├── export-dialog.tsx          # Diálogo de exportación
+│   │       ├── empty-state.tsx            # Estado vacío
+│   │       ├── loading-skeleton.tsx       # Skeleton de carga
+│   │       └── theme-provider.tsx         # Provider de tema
+│   ├── hooks/
+│   │   ├── use-tasks.ts        # Hook personalizado para tareas
+│   │   ├── use-subtasks.ts     # Hook personalizado para subtareas
+│   │   ├── use-contacts.ts     # Hook personalizado para contactos
+│   │   └── use-realtime.ts     # Hook personalizado para tiempo real
 │   ├── lib/
-│   │   ├── supabase.ts        # Cliente Supabase
-│   │   ├── utils.ts           # Utilidades
+│   │   ├── supabase/          # Cliente Supabase
+│   │   │   ├── client.ts                # Cliente cliente
+│   │   │   └── server.ts                # Cliente servidor
+│   │   ├── utils.ts            # Utilidades generales
+│   │   ├── constants.ts        # Constantes del sistema
 │   │   └── validations.ts     # Zod schemas
 │   ├── types/                 # TypeScript types
-│   └── styles/                # Estilos globales
+│   │   └── index.ts                    # Definición de tipos
+│   ├── stores/                # Estado global
+│   │   └── ui-store.ts               # Store de UI
+│   └── middleware.ts          # Middleware de autenticación
 ├── supabase/
-│   └── migrations/            # SQL migrations
+│   ├── migrations/            # SQL migrations
+│   │   ├── 001_initial_schema.sql
+│   │   ├── 002_complete_schema.sql
+│   │   ├── 003_fix_registration_with_email_confirmation.sql
+│   │   ├── 004_fix_registration_safe.sql
+│   │   └── 005_add_subtasks.sql
+│   └── config.toml           # Configuración Supabase
+├── scripts/                 # Scripts utilitarios
+│   ├── backup-supabase.ps1    # Script de backup (Windows)
+│   ├── backup-supabase.sh     # Script de backup (Linux/Mac)
+│   └── README.md             # Documentación de scripts
 ├── docker/
-│   └── Dockerfile
+│   └── Dockerfile            # Configuración Docker
 ├── package.json
 ├── tsconfig.json
-└── tailwind.config.ts
+├── tailwind.config.ts
+└── .gitignore               # Archivos ignorados por git
 ```
 
 ## 🐳 Deploy con Docker
@@ -114,7 +252,10 @@ docker build -t contaflow .
 ### Ejecutar contenedor
 
 ```bash
-docker run -p 3000:3000 -e NEXT_PUBLIC_SUPABASE_URL=your_url -e NEXT_PUBLIC_SUPABASE_ANON_KEY=your_key contaflow
+docker run -p 3000:3000 \
+  -e NEXT_PUBLIC_SUPABASE_URL=your_url \
+  -e NEXT_PUBLIC_SUPABASE_ANON_KEY=your_key \
+  contaflow
 ```
 
 ### Variables de Entorno
@@ -161,46 +302,26 @@ docker run -p 3000:3000 -e NEXT_PUBLIC_SUPABASE_URL=your_url -e NEXT_PUBLIC_SUPA
 - Validación de RUC Ecuador (13 dígitos)
 - Zod para validación de formularios
 - CSRF protection con Next.js
+- Middleware de autenticación en rutas protegidas
 
-## 🚀 Migración a Supabase Self-Hosted
+## 📚 Base de Datos
 
-¿Planificas alojar ContaFlow en tu propio VPS con Supabase Self-Hosted? Ya tienes todo listo:
+### Tablas Principales
+- **fichas**: Gestión de clientes y prospectos
+- **tasks**: Tareas con subtareas
+- **subtasks**: Subtareas de tareas
+- **timeline**: Historial de eventos
+- **kanban_columns**: Configuración de columnas kanban
+- **profiles**: Perfiles de usuarios
 
-### ⚠️ URGENTE: Si vas a borrar la instancia de Supabase Cloud
+### Migraciones Disponibles
+- Estructura inicial de la base de datos
+- Esquema completo con todas las tablas
+- Corrección de registro con confirmación de email
+- Corrección segura de registro
+- Agregado de sistema de subtareas
 
-**DEBES EJECUTAR EL SCRIPT DE BACKUP ANTES DE BORRAR.**
-
-Lee **[EMERGENCIA-URGENTE-LEER-ANTES.md](EMERGENCIA-URGENTE-LEER-ANTES.md)** para entender POR QUÉ y CÓMO hacerlo.
-
-### Recursos Disponibles
-
-- **[PASOS RÁPIDOS - EJECUTAR AHORA](PASOS-RAPIDOS-URGENTE.md)** - Si vas a borrar Supabase Cloud, LEE ESTO PRIMERO
-- **[EMERGENCIA-URGENTE-LEER-ANTES.md](EMERGENCIA-URGENTE-LEER-ANTES.md)** - Explicación detallada de POR QUÉ debes hacer el backup antes de borrar
-- **[Resumen Rápido](RESUMEN-MIGRACION-RAPIDA.md)** - Guía de 5 minutos para migrar
-- **[Guía de Manejo de Respaldos Locales](INSTRUCCIONES-MANEJO-RESPALDOS-LOCAL.md)** - Dónde se guardan los respaldos y cómo usarlos
-- **[Guía Completa](INSTRUCCIONES-MIGRACION-SUPABASE-SELF-HOSTED.md)** - Tutorial detallado paso a paso
-- **[Scripts de Backup](scripts/README.md)** - Scripts automatizados para respaldar tu BD
-
-### Proceso Simplificado
-
-1. **Crear respaldo:** Ejecuta [`scripts/backup-supabase.ps1`](scripts/backup-supabase.ps1) (Windows) o [`scripts/backup-supabase.sh`](scripts/backup-supabase.sh) (Linux/Mac)
-2. **Instalar Supabase Self-Hosted** en tu VPS usando Docker
-3. **Transferir y restaurar** el backup en la VPS
-4. **Actualizar configuración** de la aplicación con nuevas credenciales
-5. **Verificar** que todo funciona
-
-### Archivos de Migración Disponibles
-
-- ✅ Scripts automatizados de backup (PowerShell y Bash)
-- ✅ Guía de emergencia para cuando vas a borrar Supabase Cloud
-- ✅ Guía de manejo de respaldos locales - **Respaldos siempre disponibles en `backups/`**
-- ✅ Guía completa de migración con solución de problemas
-- ✅ Documentación detallada de cada paso
-- ✅ Instrucciones de mantenimiento futuro
-
-**⚠️ CRÍTICO:** Si vas a borrar la instancia de Supabase Cloud, **DEBES EJECUTAR EL SCRIPT DE BACKUP ANTES**. Lee [EMERGENCIA-URGENTE-LEER-ANTES.md](EMERGENCIA-URGENTE-LEER-ANTES.md).
-
-**Sin perder datos nunca** - Los respaldos se guardan en la carpeta `backups/` del proyecto e incluyen esquema, datos y configuraciones completas.
+Para más detalles sobre la estructura de la base de datos, consulta [`ESTRUCTURA-BD-PRODUCCION.md`](ESTRUCTURA-BD-PRODUCCION.md).
 
 ## 📄 Licencia
 
@@ -218,3 +339,7 @@ Las contribuciones son bienvenidas. Por favor:
 ## 📞 Soporte
 
 Para reportar bugs o solicitar features, por favor abre un issue en el repositorio.
+
+---
+
+**CONTAFLOW** - CRM minimalista para profesionales que valoran la simplicidad y la eficiencia.
