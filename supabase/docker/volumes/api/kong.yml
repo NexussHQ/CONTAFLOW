@@ -197,3 +197,6 @@ services:
           hide_credentials: false
       - name: acl
         config:
+          hide_groups_header: true
+          allow:
+            - admin
