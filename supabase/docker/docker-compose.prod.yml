@@ -44,7 +44,7 @@ services:
       DASHBOARD_PASSWORD: ${DASHBOARD_PASSWORD}
     volumes:
       - ./volumes/api/kong.yml:/home/kong/temp.yml:ro
-    entrypoint: bash -c 'eval "$$(cat ~/temp.yml)" > ~/kong.yml && /docker-entrypoint.sh kong docker-start'
+    entrypoint: bash -c 'eval "echo \"$$(cat ~/temp.yml)\"" > ~/kong.yml && /docker-entrypoint.sh kong docker-start'
 
   auth:
     image: supabase/gotrue:v2.132.3
