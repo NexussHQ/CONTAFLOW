@@ -1,6 +1,5 @@
 services:
   studio:
-    container_name: supabase-studio
     image: supabase/studio:2025.12.17-sha-43f4f7f
     restart: unless-stopped
     healthcheck:
@@ -26,7 +25,6 @@ services:
       - "3001:3000" # Mapped to internal 3000
 
   kong:
-    container_name: supabase-kong
     image: kong:2.8.1
     restart: unless-stopped
     environment:
@@ -44,7 +42,6 @@ services:
       - "8443:8443"
 
   auth:
-    container_name: supabase-auth
     image: supabase/gotrue:v2.132.3
     restart: unless-stopped
     healthcheck:
@@ -77,7 +74,6 @@ services:
       - db
 
   rest:
-    container_name: supabase-rest
     image: postgrest/postgrest:v12.0.1
     restart: unless-stopped
     healthcheck:
@@ -95,7 +91,6 @@ services:
       - db
 
   realtime:
-    container_name: supabase-realtime
     image: supabase/realtime:v2.25.22
     restart: unless-stopped
     healthcheck:
@@ -123,7 +118,6 @@ services:
       - db
 
   storage:
-    container_name: supabase-storage
     image: supabase/storage-api:v1.11.13
     restart: unless-stopped
     healthcheck:
@@ -150,7 +144,6 @@ services:
       - rest
 
   imgproxy:
-    container_name: supabase-imgproxy
     image: darthsim/imgproxy:v3.8.0
     restart: unless-stopped
     healthcheck:
@@ -170,7 +163,6 @@ services:
       - storage-data:/var/lib/storage
 
   meta:
-    container_name: supabase-meta
     image: supabase/postgres-meta:v0.80.0
     restart: unless-stopped
     healthcheck:
@@ -189,7 +181,6 @@ services:
       - db
 
   db:
-    container_name: supabase-db
     image: supabase/postgres:15.1.1.78
     command: postgres -c config_file=/etc/postgresql/postgresql.conf -c log_min_messages=fatal
     restart: unless-stopped
