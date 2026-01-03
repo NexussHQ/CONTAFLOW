@@ -27,19 +27,24 @@ services:
   kong:
     image: kong:2.8.1
     restart: unless-stopped
+    ports:
+      - "8000:8000"
+      - "8443:8443"
     environment:
       KONG_DATABASE: "off"
-      KONG_DECLARATIVE_CONFIG: /var/lib/kong/kong.yml
+      KONG_DECLARATIVE_CONFIG: /home/kong/kong.yml
       # https://github.com/supabase/cli/issues/14
       KONG_DNS_ORDER: A,CNAME,LAST,SRV,AAAA
       KONG_PLUGINS: request-transformer,cors,key-auth,acl,basic-auth
       KONG_NGINX_PROXY_PROXY_BUFFER_SIZE: 160k
       KONG_NGINX_PROXY_PROXY_BUFFERS: 64 160k
+      SUPABASE_ANON_KEY: ${ANON_KEY}
+      SUPABASE_SERVICE_KEY: ${SERVICE_ROLE_KEY}
+      DASHBOARD_USERNAME: ${DASHBOARD_USERNAME}
+      DASHBOARD_PASSWORD: ${DASHBOARD_PASSWORD}
     volumes:
-      - ./volumes/api/kong.yml:/var/lib/kong/kong.yml
-    ports:
-      - "8000:8000"
-      - "8443:8443"
+      - ./volumes/api/kong.yml:/home/kong/temp.yml:ro
+    entrypoint: bash -c 'eval "$$(cat ~/temp.yml)" > ~/kong.yml && /docker-entrypoint.sh kong docker-start'
 
   auth:
     image: supabase/gotrue:v2.132.3
