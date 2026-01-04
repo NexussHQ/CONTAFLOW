@@ -48,7 +48,7 @@ pnpm-debug.log*
 next-env.d.ts
 
 # logs
-logs
+logs/
 *.log
 lerna-debug.log*
 
@@ -61,8 +61,10 @@ Dockerfile.prod
 
 # Supabase local
 supabase/.temp/
-supabase/logs/
 supabase/.branches/
+
+# Allow supabase docker volumes (config files needed for deployment)
+!supabase/docker/volumes/
 
 # Temporary directories
 -p/
