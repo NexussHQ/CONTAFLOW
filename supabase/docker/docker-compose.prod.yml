@@ -14,8 +14,7 @@ services:
       interval: 5s
       retries: 3
     depends_on:
-      analytics:
-        condition: service_healthy
+      - analytics
     environment:
       HOSTNAME: "::"
       STUDIO_PG_META_URL: http://meta:8080
@@ -45,8 +44,7 @@ services:
     volumes:
       - ./volumes/api/kong.yml:/home/kong/temp.yml:ro
     depends_on:
-      analytics:
-        condition: service_healthy
+      - analytics
     environment:
       KONG_DATABASE: "off"
       KONG_DECLARATIVE_CONFIG: /home/kong/kong.yml
@@ -75,7 +73,7 @@ services:
       db:
         condition: service_healthy
       analytics:
-        condition: service_healthy
+        condition: service_started
     environment:
       GOTRUE_API_HOST: 0.0.0.0
       GOTRUE_API_PORT: 9999
@@ -113,7 +111,7 @@ services:
       db:
         condition: service_healthy
       analytics:
-        condition: service_healthy
+        condition: service_started
     environment:
       PGRST_DB_URI: postgres://authenticator:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
       PGRST_DB_SCHEMAS: ${PGRST_DB_SCHEMAS:-public,storage,graphql_public}
@@ -132,7 +130,7 @@ services:
       db:
         condition: service_healthy
       analytics:
-        condition: service_healthy
+        condition: service_started
     healthcheck:
       test: [ "CMD-SHELL", "curl -sSfL --head -o /dev/null -H \"Authorization: Bearer ${ANON_KEY}\" http://localhost:4000/api/tenants/realtime-dev/health" ]
       timeout: 5s
@@ -212,7 +210,7 @@ services:
       db:
         condition: service_healthy
       analytics:
-        condition: service_healthy
+        condition: service_started
     environment:
       PG_META_PORT: 8080
       PG_META_DB_HOST: ${POSTGRES_HOST}
@@ -228,8 +226,7 @@ services:
     volumes:
       - ./volumes/functions:/home/deno/functions
     depends_on:
-      analytics:
-        condition: service_healthy
+      - analytics
     environment:
       JWT_SECRET: ${JWT_SECRET}
       SUPABASE_URL: http://kong:8000
@@ -244,9 +241,9 @@ services:
     restart: unless-stopped
     healthcheck:
       test: [ "CMD", "curl", "http://localhost:4000/health" ]
-      timeout: 5s
+      timeout: 10s
       interval: 5s
-      retries: 10
+      retries: 20
     depends_on:
       db:
         condition: service_healthy
@@ -329,7 +326,7 @@ services:
       db:
         condition: service_healthy
       analytics:
-        condition: service_healthy
+        condition: service_started
     environment:
       PORT: 4000
       POSTGRES_PORT: ${POSTGRES_PORT}
