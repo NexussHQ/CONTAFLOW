@@ -285,8 +285,7 @@ services:
       timeout: 5s
       retries: 10
     depends_on:
-      vector:
-        condition: service_healthy
+      - vector
     environment:
       POSTGRES_HOST: /var/run/postgresql
       PGPORT: ${POSTGRES_PORT}
