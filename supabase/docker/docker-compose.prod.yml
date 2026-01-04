@@ -6,7 +6,6 @@ name: supabase-contaflow
 services:
 
   studio:
-    container_name: supabase-studio
     image: supabase/studio:2025.12.09-sha-434634f
     restart: unless-stopped
     healthcheck:
@@ -41,7 +40,6 @@ services:
       NEXT_ANALYTICS_BACKEND_PROVIDER: postgres
 
   kong:
-    container_name: supabase-kong
     image: kong:2.8.1
     restart: unless-stopped
     volumes:
@@ -66,7 +64,6 @@ services:
       - "${KONG_HTTPS_PORT:-8443}:8443"
 
   auth:
-    container_name: supabase-auth
     image: supabase/gotrue:v2.183.0
     restart: unless-stopped
     healthcheck:
@@ -110,7 +107,6 @@ services:
       GOTRUE_SMS_AUTOCONFIRM: ${ENABLE_PHONE_AUTOCONFIRM:-false}
 
   rest:
-    container_name: supabase-rest
     image: postgrest/postgrest:v14.1
     restart: unless-stopped
     depends_on:
@@ -161,7 +157,6 @@ services:
       RUN_JANITOR: "true"
 
   storage:
-    container_name: supabase-storage
     image: supabase/storage-api:v1.33.0
     restart: unless-stopped
     volumes:
@@ -195,7 +190,6 @@ services:
       IMGPROXY_URL: http://imgproxy:5001
 
   imgproxy:
-    container_name: supabase-imgproxy
     image: darthsim/imgproxy:v3.8.0
     restart: unless-stopped
     volumes:
@@ -212,7 +206,6 @@ services:
       IMGPROXY_ENABLE_WEBP_DETECTION: ${IMGPROXY_ENABLE_WEBP_DETECTION:-true}
 
   meta:
-    container_name: supabase-meta
     image: supabase/postgres-meta:v0.93.1
     restart: unless-stopped
     depends_on:
@@ -230,7 +223,6 @@ services:
       CRYPTO_KEY: ${PG_META_CRYPTO_KEY}
 
   functions:
-    container_name: supabase-edge-functions
     image: supabase/edge-runtime:v1.69.28
     restart: unless-stopped
     volumes:
@@ -248,7 +240,6 @@ services:
     command: [ "start", "--main-service", "/home/deno/functions/main" ]
 
   analytics:
-    container_name: supabase-analytics
     image: supabase/logflare:1.26.25
     restart: unless-stopped
     healthcheck:
@@ -276,7 +267,6 @@ services:
       LOGFLARE_FEATURE_FLAG_OVERRIDE: multibackend=true
 
   db:
-    container_name: supabase-db
     image: supabase/postgres:15.8.1.085
     restart: unless-stopped
     volumes:
@@ -310,7 +300,6 @@ services:
     command: [ "postgres", "-c", "config_file=/etc/postgresql/postgresql.conf", "-c", "log_min_messages=fatal" ]
 
   vector:
-    container_name: supabase-vector
     image: timberio/vector:0.28.1-alpine
     restart: unless-stopped
     volumes:
@@ -328,7 +317,6 @@ services:
       - "label=disable"
 
   supavisor:
-    container_name: supabase-pooler
     image: supabase/supavisor:2.7.4
     restart: unless-stopped
     volumes:
