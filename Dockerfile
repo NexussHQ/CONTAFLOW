@@ -26,8 +26,8 @@ WORKDIR /app
 ENV NODE_ENV production
 ENV NEXT_TELEMETRY_DISABLED 1
 
-RUN addgroup -g --gid 1001 nodejs
-RUN adduser -g --uid 1001 nextjs
+RUN addgroup -g 1001 -S nodejs
+RUN adduser -S nextjs -u 1001
 
 COPY --from=builder /app/public ./public
 # Set the correct permission for prerender cache
