@@ -88,7 +88,64 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
   );
   
   CREATE INDEX IF NOT EXISTS users_email_idx ON auth.users (email);
-  
+
+  -- Create auth.identities table
+  CREATE TABLE IF NOT EXISTS auth.identities (
+      id text NOT NULL,
+      user_id uuid NOT NULL,
+      identity_data jsonb NOT NULL,
+      provider text NOT NULL,
+      last_sign_in_at timestamp with time zone,
+      created_at timestamp with time zone,
+      updated_at timestamp with time zone,
+      email text GENERATED ALWAYS AS (lower(identity_data->>'email')) STORED,
+      CONSTRAINT identities_pkey PRIMARY KEY (provider, id),
+      CONSTRAINT identities_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
+  );
+  CREATE INDEX IF NOT EXISTS identities_user_id_idx ON auth.identities (user_id);
+  CREATE INDEX IF NOT EXISTS identities_email_idx ON auth.identities (email text_pattern_ops);
+
+  -- Create auth.sessions table
+  CREATE TABLE IF NOT EXISTS auth.sessions (
+      id uuid NOT NULL PRIMARY KEY,
+      user_id uuid NOT NULL,
+      created_at timestamp with time zone,
+      updated_at timestamp with time zone,
+      factor_id uuid,
+      aal text,
+      not_after timestamp with time zone,
+      CONSTRAINT sessions_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
+  );
+  CREATE INDEX IF NOT EXISTS sessions_user_id_idx ON auth.sessions (user_id);
+  CREATE INDEX IF NOT EXISTS sessions_not_after_idx ON auth.sessions (not_after);
+
+  -- Create auth.refresh_tokens table
+  CREATE TABLE IF NOT EXISTS auth.refresh_tokens (
+      instance_id uuid,
+      id bigserial PRIMARY KEY,
+      token character varying(255),
+      user_id character varying(255),
+      revoked boolean,
+      created_at timestamp with time zone,
+      updated_at timestamp with time zone,
+      parent character varying(255),
+      session_id uuid,
+      CONSTRAINT refresh_tokens_session_id_fkey FOREIGN KEY (session_id) REFERENCES auth.sessions(id) ON DELETE CASCADE
+  );
+  CREATE INDEX IF NOT EXISTS refresh_tokens_token_idx ON auth.refresh_tokens (token);
+  CREATE INDEX IF NOT EXISTS refresh_tokens_session_id_idx ON auth.refresh_tokens (session_id);
+  CREATE INDEX IF NOT EXISTS refresh_tokens_parent_idx ON auth.refresh_tokens (parent);
+
+  -- Create auth.audit_log_entries table
+  CREATE TABLE IF NOT EXISTS auth.audit_log_entries (
+      instance_id uuid,
+      id uuid NOT NULL PRIMARY KEY,
+      payload jsonb,
+      created_at timestamp with time zone,
+      ip_address character varying(64) DEFAULT ''::character varying NOT NULL
+  );
+  CREATE INDEX IF NOT EXISTS audit_logs_instance_id_idx ON auth.audit_log_entries (instance_id);
+
   -- Grant permissions to auth admin
   GRANT ALL PRIVILEGES ON SCHEMA auth TO supabase_auth_admin;
   GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA auth TO supabase_auth_admin;
