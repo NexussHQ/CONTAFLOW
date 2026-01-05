@@ -13,6 +13,12 @@
 
 DO $$
 BEGIN
+  -- Ensure extensions exist
+  CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+  CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+  CREATE EXTENSION IF NOT EXISTS "pgjwt";
+
+
   -- 1. Ensure required ENUMs exist
   IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'aal_level') THEN
       CREATE TYPE auth.aal_level AS ENUM ('aal1', 'aal2', 'aal3');
@@ -330,6 +336,9 @@ CREATE POLICY "Users can read ficha_etiquetas" ON ficha_etiquetas FOR SELECT USI
 );
 
 -- Trigger para crear profile y etapas default cuando se registra un nuevo usuario
+-- Trigger para crear profile y etapas default cuando se registra un nuevo usuario
+-- (DISABLED FOR DEBUGGING ISOLATION)
+/*
 CREATE OR REPLACE FUNCTION handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -360,6 +369,7 @@ DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
     AFTER INSERT ON auth.users
     FOR EACH ROW EXECUTE FUNCTION handle_new_user();
+*/
 
 -- Índices adicionales para mejor rendimiento
 CREATE INDEX IF NOT EXISTS idx_tasks_user_id ON tasks(user_id);
