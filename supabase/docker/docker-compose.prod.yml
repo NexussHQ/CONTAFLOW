@@ -16,7 +16,7 @@ services:
     depends_on:
       - analytics
     environment:
-      HOSTNAME: "::"
+      HOSTNAME: "0.0.0.0"
       STUDIO_PG_META_URL: http://meta:8080
       POSTGRES_PORT: ${POSTGRES_PORT}
       POSTGRES_HOST: ${POSTGRES_HOST}
