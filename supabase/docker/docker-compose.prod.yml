@@ -278,7 +278,7 @@ services:
     image: supabase/postgres:15.8.1.085
     restart: unless-stopped
     volumes:
-      - ./volumes/db/roles.sql:/docker-entrypoint-initdb.d/00-roles.sql
+      - ./volumes/db/init-roles.sh:/docker-entrypoint-initdb.d/00-init-roles.sh
       - ./volumes/db/jwt.sql:/docker-entrypoint-initdb.d/01-jwt.sql
       - ./volumes/db/_supabase.sql:/docker-entrypoint-initdb.d/02-_supabase.sql
       - ./volumes/db/logs.sql:/docker-entrypoint-initdb.d/03-logs.sql
@@ -286,7 +286,7 @@ services:
       - ./volumes/db/realtime.sql:/docker-entrypoint-initdb.d/05-realtime.sql
       - ./volumes/db/webhooks.sql:/docker-entrypoint-initdb.d/06-webhooks.sql
       - ./volumes/db/schema.sql:/docker-entrypoint-initdb.d/99-schema.sql
-      - db-data-final-real:/var/lib/postgresql/data
+      - db-data-v12:/var/lib/postgresql/data
       - db-config:/etc/postgresql-custom
     healthcheck:
       test: [ "CMD", "pg_isready", "-U", "postgres", "-h", "localhost" ]
@@ -361,7 +361,7 @@ services:
     command: [ "/bin/sh", "-c", "/app/bin/migrate && /app/bin/supavisor eval \"$$(cat /etc/pooler/pooler.exs)\" && /app/bin/server" ]
 
 volumes:
-  db-data-final-real:
+  db-data-v12:
   db-config:
 
 
