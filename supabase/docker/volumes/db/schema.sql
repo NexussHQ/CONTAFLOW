@@ -161,6 +161,12 @@ CREATE TABLE IF NOT EXISTS auth.flow_state (
 CREATE INDEX IF NOT EXISTS flow_state_created_at_idx ON auth.flow_state(created_at DESC);
 
 -- Ensure grants for Auth service and Dashboard
+GRANT USAGE ON SCHEMA auth TO supabase_auth_admin, dashboard_user, service_role, postgres;
+GRANT ALL ON ALL TABLES IN SCHEMA auth TO supabase_auth_admin, dashboard_user, service_role, postgres;
+GRANT ALL ON ALL SEQUENCES IN SCHEMA auth TO supabase_auth_admin, dashboard_user, service_role, postgres;
+GRANT ALL ON ALL ROUTINES IN SCHEMA auth TO supabase_auth_admin, dashboard_user, service_role, postgres;
+
+-- Specific specific grants for explicit tables just in case
 GRANT ALL ON TABLE auth.identities TO postgres, supabase_auth_admin, dashboard_user, service_role;
 GRANT ALL ON TABLE auth.sessions TO postgres, supabase_auth_admin, dashboard_user, service_role;
 GRANT ALL ON TABLE auth.mfa_factors TO postgres, supabase_auth_admin, dashboard_user, service_role;
@@ -168,8 +174,6 @@ GRANT ALL ON TABLE auth.mfa_challenges TO postgres, supabase_auth_admin, dashboa
 GRANT ALL ON TABLE auth.mfa_amr_claims TO postgres, supabase_auth_admin, dashboard_user, service_role;
 GRANT ALL ON TABLE auth.flow_state TO postgres, supabase_auth_admin, dashboard_user, service_role;
 
--- Grant usage on schemas just in case
-GRANT USAGE ON SCHEMA auth TO supabase_auth_admin, dashboard_user, service_role;
 ORDER BY id;
 
 -- ========================================
