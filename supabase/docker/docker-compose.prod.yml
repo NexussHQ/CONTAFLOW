@@ -279,7 +279,7 @@ services:
     volumes:
       - ./volumes/db/realtime.sql:/docker-entrypoint-initdb.d/migrations/99-realtime.sql
       - ./volumes/db/webhooks.sql:/docker-entrypoint-initdb.d/init-scripts/98-webhooks.sql
-      - ./volumes/db/roles.sql:/docker-entrypoint-initdb.d/init-scripts/99-roles.sql
+      - ./volumes/db/init-roles.sh:/docker-entrypoint-initdb.d/init-scripts/00-init-roles.sh
       - ./volumes/db/jwt.sql:/docker-entrypoint-initdb.d/init-scripts/99-jwt.sql
       - ./volumes/db/_supabase.sql:/docker-entrypoint-initdb.d/migrations/97-_supabase.sql
       - ./volumes/db/logs.sql:/docker-entrypoint-initdb.d/migrations/99-logs.sql
