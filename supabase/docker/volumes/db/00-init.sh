@@ -62,6 +62,15 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
   GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO supabase_auth_admin;
   GRANT ALL PRIVILEGES ON ALL ROUTINES IN SCHEMA public TO supabase_auth_admin;
   
+  -- CRITICAL: Grant public schema access to supabase_admin (Studio/Meta needs this for table creation)
+  GRANT ALL PRIVILEGES ON SCHEMA public TO supabase_admin;
+  GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO supabase_admin;
+  GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO supabase_admin;
+  GRANT ALL PRIVILEGES ON ALL ROUTINES IN SCHEMA public TO supabase_admin;
+  ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO supabase_admin;
+  ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO supabase_admin;
+  ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON FUNCTIONS TO supabase_admin;
+  
   -- Set search_path for auth admin to find both auth and public schemas
   ALTER ROLE supabase_auth_admin SET search_path TO auth, public, extensions;
 EOSQL
