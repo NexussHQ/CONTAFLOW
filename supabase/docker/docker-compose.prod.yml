@@ -286,7 +286,7 @@ services:
       - ./volumes/db/realtime.sql:/docker-entrypoint-initdb.d/05-realtime.sql
       - ./volumes/db/webhooks.sql:/docker-entrypoint-initdb.d/06-webhooks.sql
       - ./volumes/db/schema.sql:/docker-entrypoint-initdb.d/99-schema.sql
-      - db-data-v21:/var/lib/postgresql/data
+      - db-data-v20:/var/lib/postgresql/data
       - db-config:/etc/postgresql-custom
     healthcheck:
       test: [ "CMD", "pg_isready", "-U", "postgres", "-h", "localhost" ]
@@ -362,7 +362,7 @@ services:
     command: [ "/bin/sh", "-c", "/app/bin/migrate && /app/bin/supavisor eval \"$$(cat /etc/pooler/pooler.exs)\" && /app/bin/server" ]
 
 volumes:
-  db-data-v21:
+  db-data-v20:
   db-config:
 
 
