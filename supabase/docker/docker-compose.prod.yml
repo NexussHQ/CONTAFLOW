@@ -285,7 +285,7 @@ services:
       - ./volumes/db/logs.sql:/docker-entrypoint-initdb.d/migrations/99-logs.sql
       - ./volumes/db/pooler.sql:/docker-entrypoint-initdb.d/migrations/99-pooler.sql
       - ./volumes/db/schema.sql:/docker-entrypoint-initdb.d/migrations/99-z-schema.sql
-      - db-data-v5:/var/lib/postgresql/data
+      - db-data-v6:/var/lib/postgresql/data
       - db-config:/etc/postgresql-custom
     healthcheck:
       test: [ "CMD", "pg_isready", "-U", "postgres", "-h", "localhost" ]
@@ -359,7 +359,7 @@ services:
     command: [ "/bin/sh", "-c", "/app/bin/migrate && /app/bin/supavisor eval \"$$(cat /etc/pooler/pooler.exs)\" && /app/bin/server" ]
 
 volumes:
-  db-data-v5:
+  db-data-v6:
   db-config:
 
 
