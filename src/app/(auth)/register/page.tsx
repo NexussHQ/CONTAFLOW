@@ -42,10 +42,14 @@ export default function RegisterPage() {
       const result = await response.json()
 
       if (!response.ok) {
+        const errorMsg = typeof result.error === 'object'
+          ? JSON.stringify(result.error)
+          : result.error || "Ocurrió un error inesperado";
+
         toast({
           variant: "destructive",
           title: "Error al registrarse",
-          description: result.error || "Ocurrió un error inesperado",
+          description: errorMsg,
         })
       } else {
         toast({
