@@ -31,9 +31,44 @@ BEGIN
     ALTER TABLE auth.users ADD COLUMN deleted_at TIMESTAMPTZ;
   END IF;
 
-  -- Add is_anonymous if missing (detected by user error)
+  -- Add is_anonymous if missing
   IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'auth' AND table_name = 'users' AND column_name = 'is_anonymous') THEN
     ALTER TABLE auth.users ADD COLUMN is_anonymous BOOLEAN DEFAULT FALSE NOT NULL;
+  END IF;
+  
+  -- Add phone if missing
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'auth' AND table_name = 'users' AND column_name = 'phone') THEN
+    ALTER TABLE auth.users ADD COLUMN phone TEXT DEFAULT NULL;
+  END IF;
+
+  -- Add phone_confirmed_at if missing
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'auth' AND table_name = 'users' AND column_name = 'phone_confirmed_at') THEN
+    ALTER TABLE auth.users ADD COLUMN phone_confirmed_at TIMESTAMPTZ DEFAULT NULL;
+  END IF;
+
+  -- Add phone_change if missing
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'auth' AND table_name = 'users' AND column_name = 'phone_change') THEN
+    ALTER TABLE auth.users ADD COLUMN phone_change TEXT DEFAULT '';
+  END IF;
+
+  -- Add phone_change_token if missing
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'auth' AND table_name = 'users' AND column_name = 'phone_change_token') THEN
+    ALTER TABLE auth.users ADD COLUMN phone_change_token VARCHAR(255) DEFAULT '';
+  END IF;
+
+  -- Add phone_change_sent_at if missing
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'auth' AND table_name = 'users' AND column_name = 'phone_change_sent_at') THEN
+    ALTER TABLE auth.users ADD COLUMN phone_change_sent_at TIMESTAMPTZ DEFAULT NULL;
+  END IF;
+
+  -- Add email_change_token_current if missing
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'auth' AND table_name = 'users' AND column_name = 'email_change_token_current') THEN
+    ALTER TABLE auth.users ADD COLUMN email_change_token_current VARCHAR(255) DEFAULT '';
+  END IF;
+
+  -- Add email_change_confirm_status if missing
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'auth' AND table_name = 'users' AND column_name = 'email_change_confirm_status') THEN
+    ALTER TABLE auth.users ADD COLUMN email_change_confirm_status SMALLINT DEFAULT 0 CHECK (email_change_confirm_status >= 0 AND email_change_confirm_status <= 2);
   END IF;
 END $$;
 
