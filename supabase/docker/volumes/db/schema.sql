@@ -1,6 +1,37 @@
 -- ========================================
--- APPLICATION SCHEMA (Simplified)
+-- APPLICATION SCHEMA (Simplified + Compatibility Patches)
 -- ========================================
+
+-- COMPATIBILITY PATCH: Add columns expected by newer GoTrue versions
+-- The base image schema might be slightly older.
+DO $$
+BEGIN
+  -- 1. banned_until
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'auth' AND table_name = 'users' AND column_name = 'banned_until') THEN
+    ALTER TABLE auth.users ADD COLUMN banned_until TIMESTAMPTZ;
+  END IF;
+
+  -- 2. is_anonymous
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'auth' AND table_name = 'users' AND column_name = 'is_anonymous') THEN
+    ALTER TABLE auth.users ADD COLUMN is_anonymous BOOLEAN DEFAULT FALSE NOT NULL;
+  END IF;
+
+  -- 3. is_sso_user
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'auth' AND table_name = 'users' AND column_name = 'is_sso_user') THEN
+    ALTER TABLE auth.users ADD COLUMN is_sso_user BOOLEAN DEFAULT FALSE NOT NULL;
+  END IF;
+
+  -- 4. deleted_at
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'auth' AND table_name = 'users' AND column_name = 'deleted_at') THEN
+    ALTER TABLE auth.users ADD COLUMN deleted_at TIMESTAMPTZ;
+  END IF;
+  
+   -- 5. phone defaults (often causes issues)
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'auth' AND table_name = 'users' AND column_name = 'phone') THEN
+    ALTER TABLE auth.users ADD COLUMN phone TEXT DEFAULT NULL;
+  END IF;
+END $$;
+
 -- This file contains ONLY the application-specific tables.
 -- Authentication tables (auth.users) are managed by Supabase standard migrations.
 
