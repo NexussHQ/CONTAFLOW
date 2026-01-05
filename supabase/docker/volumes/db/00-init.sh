@@ -187,8 +187,17 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
   GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA auth TO supabase_admin, postgres, service_role;
   GRANT ALL PRIVILEGES ON ALL ROUTINES IN SCHEMA auth TO supabase_admin, postgres, service_role;
 
-  -- CRITICAL: Set auth schema owner to supabase_auth_admin so GoTrue can manage it
+  -- CRITICAL: Set ownership of ALL auth objects to supabase_auth_admin so GoTrue can modify them
   ALTER SCHEMA auth OWNER TO supabase_auth_admin;
+  ALTER TABLE auth.users OWNER TO supabase_auth_admin;
+  ALTER TABLE auth.identities OWNER TO supabase_auth_admin;
+  ALTER TABLE auth.sessions OWNER TO supabase_auth_admin;
+  ALTER TABLE auth.refresh_tokens OWNER TO supabase_auth_admin;
+  ALTER TABLE auth.audit_log_entries OWNER TO supabase_auth_admin;
+  ALTER TABLE auth.schema_migrations OWNER TO supabase_auth_admin;
+  
+  -- Also transfer sequence ownership for refresh_tokens
+  ALTER SEQUENCE auth.refresh_tokens_id_seq OWNER TO supabase_auth_admin;
 EOSQL
 
 echo "Database Initialization Completed Successfully."
