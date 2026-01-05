@@ -45,6 +45,15 @@ services:
       - ./volumes/api/kong.yml:/home/kong/temp.yml:ro
     depends_on:
       - analytics
+    links:
+      - studio
+      - auth
+      - rest
+      - realtime
+      - storage
+      - meta
+      - functions
+      - analytics
     environment:
       KONG_DATABASE: "off"
       KONG_DECLARATIVE_CONFIG: /home/kong/kong.yml
