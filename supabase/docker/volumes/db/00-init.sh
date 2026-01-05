@@ -94,6 +94,16 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
   GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA auth TO supabase_auth_admin;
   GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA auth TO supabase_auth_admin;
   GRANT ALL PRIVILEGES ON ALL ROUTINES IN SCHEMA auth TO supabase_auth_admin;
+
+  -- FIX: Grant permissions to other admin roles (Studio/API access)
+  GRANT USAGE ON SCHEMA auth TO anon, authenticated, service_role;
+  GRANT ALL PRIVILEGES ON SCHEMA auth TO supabase_admin, postgres, service_role;
+  GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA auth TO supabase_admin, postgres, service_role;
+  GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA auth TO supabase_admin, postgres, service_role;
+  GRANT ALL PRIVILEGES ON ALL ROUTINES IN SCHEMA auth TO supabase_admin, postgres, service_role;
+
+  -- Ensure postgres owns the schema to avoid weird permission locks
+  ALTER SCHEMA auth OWNER TO postgres;
 EOSQL
 
 echo "Database Initialization Completed Successfully."
