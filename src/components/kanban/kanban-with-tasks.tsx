@@ -86,10 +86,10 @@ export function KanbanBoardWithTasks({ columns, onMoveCard, onEditColumn, onAddC
 
     const { createClient } = await import('@/lib/supabase/client');
     const supabase = createClient();
-    
+
     try {
-      const { user } = await supabase.auth.getUser();
-      if (!user.data.user) {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
         console.error('No hay usuario autenticado');
         return;
       }
@@ -102,7 +102,7 @@ export function KanbanBoardWithTasks({ columns, onMoveCard, onEditColumn, onAddC
           priority: newTaskData.priority === 'high' ? 'high' : 'normal',
           status: 'pending',
           ficha_id: selectedColumnId,
-          user_id: user.data.user.id,
+          user_id: user.id,
         })
         .select()
         .single();
@@ -154,7 +154,7 @@ export function KanbanBoardWithTasks({ columns, onMoveCard, onEditColumn, onAddC
                 </div>
                 <div className="flex items-center gap-2">
                   <Badge variant="secondary">{column.fichas.length}</Badge>
-                  
+
                   {/* Botón para crear tarea */}
                   <Button
                     variant="ghost"
@@ -215,8 +215,8 @@ export function KanbanBoardWithTasks({ columns, onMoveCard, onEditColumn, onAddC
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2">
                                   <p className="font-medium text-sm truncate">{ficha.nombre}</p>
-                                  <ExternalLink 
-                                    className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" 
+                                  <ExternalLink
+                                    className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
                                     onClick={(e) => e.stopPropagation()}
                                   />
                                 </div>
