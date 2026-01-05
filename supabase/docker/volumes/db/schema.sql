@@ -6,71 +6,171 @@
 -- ========================================
 
 -- ========================================
--- PART 0: FIX AUTH SCHEMA MISMATCH
+-- PART 0: FIX AUTH SCHEMA MISMATCH (COMPLETE)
 -- ========================================
 -- Fix for potential mismatch between Postgres image schema and GoTrue version
+-- This recreation ensures all modern Auth tables exist.
+
 DO $$
 BEGIN
-  -- Add banned_until if missing
-  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'auth' AND table_name = 'users' AND column_name = 'banned_until') THEN
-    ALTER TABLE auth.users ADD COLUMN banned_until TIMESTAMPTZ;
+  -- 1. Ensure required ENUMs exist
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'aal_level') THEN
+      CREATE TYPE auth.aal_level AS ENUM ('aal1', 'aal2', 'aal3');
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'factor_type') THEN
+      CREATE TYPE auth.factor_type AS ENUM ('totp', 'webauthn');
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'factor_status') THEN
+      CREATE TYPE auth.factor_status AS ENUM ('unverified', 'verified');
   END IF;
 
-  -- Add reauthentication_token if missing (often missing in older schemas)
-  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'auth' AND table_name = 'users' AND column_name = 'reauthentication_token') THEN
-    ALTER TABLE auth.users ADD COLUMN reauthentication_token VARCHAR(255) DEFAULT '';
-  END IF;
-
-  -- Add is_sso_user if missing
-  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'auth' AND table_name = 'users' AND column_name = 'is_sso_user') THEN
-    ALTER TABLE auth.users ADD COLUMN is_sso_user BOOLEAN DEFAULT FALSE NOT NULL;
-  END IF;
-  
-  -- Add deleted_at if missing
+  -- 2. Add missing columns to auth.users
   IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'auth' AND table_name = 'users' AND column_name = 'deleted_at') THEN
     ALTER TABLE auth.users ADD COLUMN deleted_at TIMESTAMPTZ;
   END IF;
 
-  -- Add is_anonymous if missing
   IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'auth' AND table_name = 'users' AND column_name = 'is_anonymous') THEN
     ALTER TABLE auth.users ADD COLUMN is_anonymous BOOLEAN DEFAULT FALSE NOT NULL;
   END IF;
   
-  -- Add phone if missing
   IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'auth' AND table_name = 'users' AND column_name = 'phone') THEN
     ALTER TABLE auth.users ADD COLUMN phone TEXT DEFAULT NULL;
   END IF;
 
-  -- Add phone_confirmed_at if missing
   IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'auth' AND table_name = 'users' AND column_name = 'phone_confirmed_at') THEN
     ALTER TABLE auth.users ADD COLUMN phone_confirmed_at TIMESTAMPTZ DEFAULT NULL;
   END IF;
 
-  -- Add phone_change if missing
   IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'auth' AND table_name = 'users' AND column_name = 'phone_change') THEN
     ALTER TABLE auth.users ADD COLUMN phone_change TEXT DEFAULT '';
   END IF;
 
-  -- Add phone_change_token if missing
   IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'auth' AND table_name = 'users' AND column_name = 'phone_change_token') THEN
     ALTER TABLE auth.users ADD COLUMN phone_change_token VARCHAR(255) DEFAULT '';
   END IF;
 
-  -- Add phone_change_sent_at if missing
   IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'auth' AND table_name = 'users' AND column_name = 'phone_change_sent_at') THEN
     ALTER TABLE auth.users ADD COLUMN phone_change_sent_at TIMESTAMPTZ DEFAULT NULL;
   END IF;
 
-  -- Add email_change_token_current if missing
   IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'auth' AND table_name = 'users' AND column_name = 'email_change_token_current') THEN
     ALTER TABLE auth.users ADD COLUMN email_change_token_current VARCHAR(255) DEFAULT '';
   END IF;
 
-  -- Add email_change_confirm_status if missing
   IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'auth' AND table_name = 'users' AND column_name = 'email_change_confirm_status') THEN
     ALTER TABLE auth.users ADD COLUMN email_change_confirm_status SMALLINT DEFAULT 0 CHECK (email_change_confirm_status >= 0 AND email_change_confirm_status <= 2);
   END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'auth' AND table_name = 'users' AND column_name = 'banned_until') THEN
+    ALTER TABLE auth.users ADD COLUMN banned_until TIMESTAMPTZ;
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'auth' AND table_name = 'users' AND column_name = 'reauthentication_token') THEN
+    ALTER TABLE auth.users ADD COLUMN reauthentication_token VARCHAR(255) DEFAULT '';
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'auth' AND table_name = 'users' AND column_name = 'is_sso_user') THEN
+    ALTER TABLE auth.users ADD COLUMN is_sso_user BOOLEAN DEFAULT FALSE NOT NULL;
+  END IF;
+
 END $$;
+
+-- 3. Create missing tables (Identities, Sessions, MFA)
+CREATE TABLE IF NOT EXISTS auth.identities (
+    id text NOT NULL,
+    user_id uuid NOT NULL,
+    identity_data jsonb NOT NULL,
+    provider text NOT NULL,
+    last_sign_in_at timestamptz,
+    created_at timestamptz,
+    updated_at timestamptz,
+    email text GENERATED ALWAYS AS (lower(identity_data->>'email')) STORED,
+    CONSTRAINT identities_pkey PRIMARY KEY (provider, id),
+    CONSTRAINT identities_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
+);
+CREATE INDEX IF NOT EXISTS identities_user_id_idx ON auth.identities(user_id);
+CREATE INDEX IF NOT EXISTS identities_email_idx ON auth.identities (email text_pattern_ops);
+
+CREATE TABLE IF NOT EXISTS auth.sessions (
+    id uuid NOT NULL,
+    user_id uuid NOT NULL,
+    created_at timestamptz,
+    updated_at timestamptz,
+    factor_id uuid,
+    aal auth.aal_level,
+    not_after timestamptz,
+    refreshed_at timestamptz,
+    user_agent text,
+    ip text,
+    tag text,
+    CONSTRAINT sessions_pkey PRIMARY KEY (id),
+    CONSTRAINT sessions_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
+);
+CREATE INDEX IF NOT EXISTS sessions_user_id_idx ON auth.sessions(user_id);
+CREATE INDEX IF NOT EXISTS sessions_not_after_idx ON auth.sessions(not_after);
+
+CREATE TABLE IF NOT EXISTS auth.mfa_factors (
+    id uuid NOT NULL,
+    user_id uuid NOT NULL,
+    friendly_name text,
+    factor_type auth.factor_type NOT NULL,
+    status auth.factor_status NOT NULL,
+    created_at timestamptz,
+    updated_at timestamptz,
+    secret text,
+    CONSTRAINT mfa_factors_pkey PRIMARY KEY (id),
+    CONSTRAINT mfa_factors_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
+);
+CREATE INDEX IF NOT EXISTS mfa_factors_user_id_idx ON auth.mfa_factors(user_id);
+
+CREATE TABLE IF NOT EXISTS auth.mfa_challenges (
+    id uuid NOT NULL,
+    factor_id uuid NOT NULL,
+    created_at timestamptz NOT NULL,
+    verified_at timestamptz,
+    ip_address inet NOT NULL,
+    CONSTRAINT mfa_challenges_pkey PRIMARY KEY (id),
+    CONSTRAINT mfa_challenges_auth_factor_id_fkey FOREIGN KEY (factor_id) REFERENCES auth.mfa_factors(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS auth.mfa_amr_claims (
+    session_id uuid NOT NULL,
+    created_at timestamptz NOT NULL,
+    updated_at timestamptz NOT NULL,
+    authentication_method text NOT NULL,
+    id uuid NOT NULL,
+    CONSTRAINT mfa_amr_claims_session_id_fkey FOREIGN KEY (session_id) REFERENCES auth.sessions(id) ON DELETE CASCADE,
+    CONSTRAINT mfa_amr_claims_pkey PRIMARY KEY (id)
+);
+CREATE UNIQUE INDEX IF NOT EXISTS mfa_amr_claims_session_id_authentication_method_pkey ON auth.mfa_amr_claims(session_id, authentication_method);
+
+CREATE TABLE IF NOT EXISTS auth.flow_state (
+    id uuid NOT NULL,
+    user_id uuid,
+    auth_code text NOT NULL,
+    code_challenge_method auth.code_challenge_method NOT NULL,
+    code_challenge text NOT NULL,
+    provider_type text NOT NULL,
+    provider_access_token text,
+    provider_refresh_token text,
+    created_at timestamptz,
+    updated_at timestamptz,
+    authentication_method text NOT NULL,
+    CONSTRAINT flow_state_pkey PRIMARY KEY (id)
+);
+CREATE INDEX IF NOT EXISTS flow_state_created_at_idx ON auth.flow_state(created_at DESC);
+
+-- Ensure grants for Auth service and Dashboard
+GRANT ALL ON TABLE auth.identities TO postgres, supabase_auth_admin, dashboard_user, service_role;
+GRANT ALL ON TABLE auth.sessions TO postgres, supabase_auth_admin, dashboard_user, service_role;
+GRANT ALL ON TABLE auth.mfa_factors TO postgres, supabase_auth_admin, dashboard_user, service_role;
+GRANT ALL ON TABLE auth.mfa_challenges TO postgres, supabase_auth_admin, dashboard_user, service_role;
+GRANT ALL ON TABLE auth.mfa_amr_claims TO postgres, supabase_auth_admin, dashboard_user, service_role;
+GRANT ALL ON TABLE auth.flow_state TO postgres, supabase_auth_admin, dashboard_user, service_role;
+
+-- Grant usage on schemas just in case
+GRANT USAGE ON SCHEMA auth TO supabase_auth_admin, dashboard_user, service_role;
+ORDER BY id;
 
 -- ========================================
 -- PART 1: INITIAL SCHEMA
