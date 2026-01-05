@@ -6,6 +6,33 @@
 -- ========================================
 
 -- ========================================
+-- PART 0: FIX AUTH SCHEMA MISMATCH
+-- ========================================
+-- Fix for potential mismatch between Postgres image schema and GoTrue version
+DO $$
+BEGIN
+  -- Add banned_until if missing
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'auth' AND table_name = 'users' AND column_name = 'banned_until') THEN
+    ALTER TABLE auth.users ADD COLUMN banned_until TIMESTAMPTZ;
+  END IF;
+
+  -- Add reauthentication_token if missing (often missing in older schemas)
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'auth' AND table_name = 'users' AND column_name = 'reauthentication_token') THEN
+    ALTER TABLE auth.users ADD COLUMN reauthentication_token VARCHAR(255) DEFAULT '';
+  END IF;
+
+  -- Add is_sso_user if missing
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'auth' AND table_name = 'users' AND column_name = 'is_sso_user') THEN
+    ALTER TABLE auth.users ADD COLUMN is_sso_user BOOLEAN DEFAULT FALSE NOT NULL;
+  END IF;
+  
+  -- Add deleted_at if missing
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'auth' AND table_name = 'users' AND column_name = 'deleted_at') THEN
+    ALTER TABLE auth.users ADD COLUMN deleted_at TIMESTAMPTZ;
+  END IF;
+END $$;
+
+-- ========================================
 -- PART 1: INITIAL SCHEMA
 -- ========================================
 
