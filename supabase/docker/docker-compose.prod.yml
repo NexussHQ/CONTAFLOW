@@ -276,19 +276,7 @@ services:
 
   db:
     image: supabase/postgres:15.8.1.085
-    restart: unless-stopped
-    volumes:
-      - ./volumes/db/webhooks.sql:/docker-entrypoint-initdb.d/init-scripts/98-webhooks.sql
-      - ./volumes/db/jwt.sql:/docker-entrypoint-initdb.d/init-scripts/99-jwt.sql
-      - ./volumes/db/_supabase.sql:/docker-entrypoint-initdb.d/97-_supabase.sql
-      - ./volumes/db/init-roles.sh:/docker-entrypoint-initdb.d/00-init-roles.sh
-      - ./volumes/db/realtime.sql:/docker-entrypoint-initdb.d/01-realtime.sql
-      - ./volumes/db/roles.sql:/docker-entrypoint-initdb.d/01-roles.sql
-      - ./volumes/db/logs.sql:/docker-entrypoint-initdb.d/01-logs.sql
-      - ./volumes/db/pooler.sql:/docker-entrypoint-initdb.d/01-pooler.sql
-      - ./volumes/db/schema.sql:/docker-entrypoint-initdb.d/02-schema.sql
-      - db-data-v10:/var/lib/postgresql/data-custom
-      - db-config:/etc/postgresql-custom
+    restart: unless-stopped - ./volumes/db/realtime.sql:/docker-entrypoint-initdb.d/migrations/01-realtime.sql - ./volumes/db/webhooks.sql:/docker-entrypoint-initdb.d/init-scripts/98-webhooks.sql - ./volumes/db/roles.sql:/docker-entrypoint-initdb.d/migrations/02-roles.sql - ./volumes/db/jwt.sql:/docker-entrypoint-initdb.d/init-scripts/99-jwt.sql - ./volumes/db/_supabase.sql:/docker-entrypoint-initdb.d/migrations/97-_supabase.sql - ./volumes/db/logs.sql:/docker-entrypoint-initdb.d/migrations/00-logs.sql - ./volumes/db/pooler.sql:/docker-entrypoint-initdb.d/migrations/00-pooler.sql - ./volumes/db/schema.sql:/docker-entrypoint-initdb.d/migrations/99-schema.sql - db-data-final:/var/lib/postgresql/data - db-config:/etc/postgresql-custom
     healthcheck:
       test: [ "CMD", "pg_isready", "-U", "postgres", "-h", "localhost" ]
       timeout: 5s
@@ -362,7 +350,7 @@ services:
     command: [ "/bin/sh", "-c", "/app/bin/migrate && /app/bin/supavisor eval \"$$(cat /etc/pooler/pooler.exs)\" && /app/bin/server" ]
 
 volumes:
-  db-data-v10:
+  db-data-final:
   db-config:
 
 
