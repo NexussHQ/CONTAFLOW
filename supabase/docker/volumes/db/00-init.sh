@@ -55,6 +55,15 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
   GRANT authenticated TO authenticator;
   GRANT service_role TO authenticator;
   GRANT supabase_admin TO authenticator;
+  
+  -- CRITICAL: Grant public schema access to auth admin (GoTrue needs this for migrations)
+  GRANT ALL PRIVILEGES ON SCHEMA public TO supabase_auth_admin;
+  GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO supabase_auth_admin;
+  GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO supabase_auth_admin;
+  GRANT ALL PRIVILEGES ON ALL ROUTINES IN SCHEMA public TO supabase_auth_admin;
+  
+  -- Set search_path for auth admin to find both auth and public schemas
+  ALTER ROLE supabase_auth_admin SET search_path TO auth, public, extensions;
 EOSQL
 
 # 2. Initialize Auth Schema (Defense against missing migrations)
