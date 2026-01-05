@@ -30,6 +30,11 @@ BEGIN
   IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'auth' AND table_name = 'users' AND column_name = 'deleted_at') THEN
     ALTER TABLE auth.users ADD COLUMN deleted_at TIMESTAMPTZ;
   END IF;
+
+  -- Add is_anonymous if missing (detected by user error)
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'auth' AND table_name = 'users' AND column_name = 'is_anonymous') THEN
+    ALTER TABLE auth.users ADD COLUMN is_anonymous BOOLEAN DEFAULT FALSE NOT NULL;
+  END IF;
 END $$;
 
 -- ========================================
