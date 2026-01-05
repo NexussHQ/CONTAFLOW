@@ -32,15 +32,29 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
     ELSE
       ALTER ROLE supabase_storage_admin WITH PASSWORD '$POSTGRES_PASSWORD';
     END IF;
+    
+    -- CRITICAL: authenticator role for PostgREST
+    IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'authenticator') THEN
+      CREATE ROLE authenticator NOINHERIT LOGIN PASSWORD '$POSTGRES_PASSWORD';
+    ELSE
+      ALTER ROLE authenticator WITH PASSWORD '$POSTGRES_PASSWORD';
+    END IF;
   END
   \$\$;
 
+  -- Grant roles to postgres
   GRANT anon TO postgres;
   GRANT authenticated TO postgres;
   GRANT service_role TO postgres;
   GRANT supabase_admin TO postgres;
   GRANT supabase_auth_admin TO postgres;
   GRANT supabase_storage_admin TO postgres;
+  
+  -- Grant roles to authenticator (PostgREST requires this to switch roles)
+  GRANT anon TO authenticator;
+  GRANT authenticated TO authenticator;
+  GRANT service_role TO authenticator;
+  GRANT supabase_admin TO authenticator;
 EOSQL
 
 # 2. Initialize Auth Schema (Defense against missing migrations)
@@ -146,6 +160,11 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
   );
   CREATE INDEX IF NOT EXISTS audit_logs_instance_id_idx ON auth.audit_log_entries (instance_id);
 
+  -- Create auth.schema_migrations table (required by GoTrue)
+  CREATE TABLE IF NOT EXISTS auth.schema_migrations (
+      version character varying(255) NOT NULL PRIMARY KEY
+  );
+
   -- Grant permissions to auth admin
   GRANT ALL PRIVILEGES ON SCHEMA auth TO supabase_auth_admin;
   GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA auth TO supabase_auth_admin;
@@ -159,8 +178,8 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
   GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA auth TO supabase_admin, postgres, service_role;
   GRANT ALL PRIVILEGES ON ALL ROUTINES IN SCHEMA auth TO supabase_admin, postgres, service_role;
 
-  -- Ensure postgres owns the schema to avoid weird permission locks
-  ALTER SCHEMA auth OWNER TO postgres;
+  -- CRITICAL: Set auth schema owner to supabase_auth_admin so GoTrue can manage it
+  ALTER SCHEMA auth OWNER TO supabase_auth_admin;
 EOSQL
 
 echo "Database Initialization Completed Successfully."
