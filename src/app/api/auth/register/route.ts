@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
       password,
       options: {
         data: {
-          nombre,
+          full_name: nombre,
         },
       },
     })
@@ -52,6 +52,7 @@ export async function POST(request: NextRequest) {
     // Esta función tiene SECURITY DEFINER, por lo que puede insertar
     // incluso si el usuario no está confirmado
     try {
+      /*
       console.log("Intentando llamar a RPC create_user_profile_and_columns")
       const { data: rpcData, error: rpcError } = await supabase.rpc(
         "create_user_profile_and_columns",
@@ -65,35 +66,35 @@ export async function POST(request: NextRequest) {
 
       if (rpcError) {
         console.error("Error al crear el perfil y las columnas Kanban:", rpcError)
-        // No retornamos error aquí porque el usuario ya fue creado
-        // El usuario podrá acceder al sistema después de confirmar su email
       } else {
         console.log("Perfil y columnas Kanban creados exitosamente")
       }
+      */
+      /*
     } catch (rpcException) {
       console.error("Excepción al llamar RPC:", rpcException)
-      // No retornamos error aquí porque el usuario ya fue creado
     }
+    */
 
-    // Retornar éxito indicando que el usuario debe confirmar su email
-    return NextResponse.json({
-      message: "Registro exitoso. Por favor verifica tu email para confirmar la cuenta.",
-      requiresEmailConfirmation: true,
-    }, { status: 201 })
+      // Retornar éxito indicando que el usuario debe confirmar su email
+      return NextResponse.json({
+        message: "Registro exitoso. Por favor verifica tu email para confirmar la cuenta.",
+        requiresEmailConfirmation: true,
+      }, { status: 201 })
 
-  } catch (error) {
-    console.error("Error en el registro:", error)
+    } catch (error) {
+      console.error("Error en el registro:", error)
 
-    if (error instanceof z.ZodError) {
+      if (error instanceof z.ZodError) {
+        return NextResponse.json(
+          { error: "Datos de registro inválidos", details: error.errors },
+          { status: 400 }
+        )
+      }
+
       return NextResponse.json(
-        { error: "Datos de registro inválidos", details: error.errors },
-        { status: 400 }
+        { error: "Error interno del servidor" },
+        { status: 500 }
       )
     }
-
-    return NextResponse.json(
-      { error: "Error interno del servidor" },
-      { status: 500 }
-    )
   }
-}

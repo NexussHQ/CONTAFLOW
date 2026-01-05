@@ -334,18 +334,18 @@ CREATE OR REPLACE FUNCTION handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
     -- Insertar perfil del usuario
-    INSERT INTO profiles (id, full_name)
+    INSERT INTO public.profiles (id, full_name)
     VALUES (NEW.id, NEW.raw_user_meta_data->>'full_name');
     
     -- Insertar columnas Kanban por defecto para Ventas
-    INSERT INTO columnas_kanban (user_id, tipo, nombre, posicion, color) VALUES
+    INSERT INTO public.columnas_kanban (user_id, tipo, nombre, posicion, color) VALUES
     (NEW.id, 'ventas', 'Por Contactar', 0, '#94a3b8'),
     (NEW.id, 'ventas', 'En Conversación', 1, '#3b82f6'),
     (NEW.id, 'ventas', 'Propuesta Enviada', 2, '#f59e0b'),
     (NEW.id, 'ventas', 'Ganado', 3, '#22c55e');
     
     -- Insertar columnas Kanban por defecto para Postventa/Operaciones
-    INSERT INTO columnas_kanban (user_id, tipo, nombre, posicion, color) VALUES
+    INSERT INTO public.columnas_kanban (user_id, tipo, nombre, posicion, color) VALUES
     (NEW.id, 'postventa', 'Onboarding', 0, '#8b5cf6'),
     (NEW.id, 'postventa', 'En Proceso', 1, '#3b82f6'),
     (NEW.id, 'postventa', 'Por Facturar', 2, '#f59e0b'),
