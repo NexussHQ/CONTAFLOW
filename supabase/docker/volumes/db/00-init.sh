@@ -212,6 +212,61 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
   CREATE INDEX IF NOT EXISTS one_time_tokens_user_id_token_type_idx ON auth.one_time_tokens (user_id, token_type);
   CREATE INDEX IF NOT EXISTS one_time_tokens_relates_to_idx ON auth.one_time_tokens (relates_to);
 
+  -- Create MFA enum types
+  DO \$\$
+  BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'factor_type' AND typnamespace = (SELECT oid FROM pg_namespace WHERE nspname = 'auth')) THEN
+      CREATE TYPE auth.factor_type AS ENUM ('totp', 'webauthn', 'phone');
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'factor_status' AND typnamespace = (SELECT oid FROM pg_namespace WHERE nspname = 'auth')) THEN
+      CREATE TYPE auth.factor_status AS ENUM ('unverified', 'verified');
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'aal_level' AND typnamespace = (SELECT oid FROM pg_namespace WHERE nspname = 'auth')) THEN
+      CREATE TYPE auth.aal_level AS ENUM ('aal1', 'aal2', 'aal3');
+    END IF;
+  END
+  \$\$;
+
+  -- Create auth.mfa_factors table (for MFA TOTP/WebAuthn/Phone)
+  CREATE TABLE IF NOT EXISTS auth.mfa_factors (
+      id uuid NOT NULL PRIMARY KEY,
+      user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+      friendly_name text,
+      factor_type auth.factor_type NOT NULL,
+      status auth.factor_status NOT NULL,
+      created_at timestamp with time zone NOT NULL,
+      updated_at timestamp with time zone NOT NULL,
+      secret text,
+      phone text,
+      last_challenged_at timestamp with time zone,
+      last_webauthn_challenge_data jsonb,
+      web_authn_credential jsonb,
+      web_authn_aaguid uuid
+  );
+  CREATE INDEX IF NOT EXISTS mfa_factors_user_id_idx ON auth.mfa_factors (user_id);
+  CREATE UNIQUE INDEX IF NOT EXISTS mfa_factors_user_friendly_name_unique ON auth.mfa_factors (user_id, friendly_name) WHERE friendly_name IS NOT NULL;
+
+  -- Create auth.mfa_challenges table
+  CREATE TABLE IF NOT EXISTS auth.mfa_challenges (
+      id uuid NOT NULL PRIMARY KEY,
+      factor_id uuid NOT NULL REFERENCES auth.mfa_factors(id) ON DELETE CASCADE,
+      created_at timestamp with time zone NOT NULL,
+      verified_at timestamp with time zone,
+      ip_address inet NOT NULL,
+      otp_code text
+  );
+  CREATE INDEX IF NOT EXISTS mfa_challenges_factor_id_idx ON auth.mfa_challenges (factor_id);
+
+  -- Create auth.mfa_amr_claims table (authentication method reference claims)
+  CREATE TABLE IF NOT EXISTS auth.mfa_amr_claims (
+      id uuid NOT NULL PRIMARY KEY,
+      session_id uuid NOT NULL REFERENCES auth.sessions(id) ON DELETE CASCADE,
+      created_at timestamp with time zone NOT NULL,
+      updated_at timestamp with time zone NOT NULL,
+      authentication_method text NOT NULL
+  );
+  CREATE UNIQUE INDEX IF NOT EXISTS amr_id_pk ON auth.mfa_amr_claims (session_id, authentication_method);
+
   -- Grant permissions to auth admin
   GRANT ALL PRIVILEGES ON SCHEMA auth TO supabase_auth_admin;
   GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA auth TO supabase_auth_admin;
