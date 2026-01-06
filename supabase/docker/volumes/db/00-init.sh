@@ -114,6 +114,7 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
 
   -- Create auth.identities table
   CREATE TABLE IF NOT EXISTS auth.identities (
+      provider_id text NOT NULL,
       id text NOT NULL,
       user_id uuid NOT NULL,
       identity_data jsonb NOT NULL,
@@ -122,7 +123,8 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
       created_at timestamp with time zone,
       updated_at timestamp with time zone,
       email text GENERATED ALWAYS AS (lower(identity_data->>'email')) STORED,
-      CONSTRAINT identities_pkey PRIMARY KEY (provider, id),
+      CONSTRAINT identities_pkey PRIMARY KEY (id),
+      CONSTRAINT identities_provider_id_provider_unique UNIQUE (provider_id, provider),
       CONSTRAINT identities_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
   );
   CREATE INDEX IF NOT EXISTS identities_user_id_idx ON auth.identities (user_id);
