@@ -130,7 +130,7 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
   CREATE INDEX IF NOT EXISTS identities_user_id_idx ON auth.identities (user_id);
   CREATE INDEX IF NOT EXISTS identities_email_idx ON auth.identities (email text_pattern_ops);
 
-  -- Create auth.sessions table
+  -- Create auth.sessions table (with all columns expected by GoTrue)
   CREATE TABLE IF NOT EXISTS auth.sessions (
       id uuid NOT NULL PRIMARY KEY,
       user_id uuid NOT NULL,
@@ -139,6 +139,14 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
       factor_id uuid,
       aal text,
       not_after timestamp with time zone,
+      refreshed_at timestamp without time zone,
+      user_agent text,
+      ip inet,
+      tag text,
+      scopes text[],
+      oauth_client_id uuid,
+      refresh_token_counter bigint DEFAULT 0,
+      refresh_token_hmac_key bytea,
       CONSTRAINT sessions_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
   );
   CREATE INDEX IF NOT EXISTS sessions_user_id_idx ON auth.sessions (user_id);
