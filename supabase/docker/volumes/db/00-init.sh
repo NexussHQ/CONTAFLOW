@@ -176,6 +176,34 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
       version character varying(255) NOT NULL PRIMARY KEY
   );
 
+  -- Create auth.one_time_tokens table (required by GoTrue for email/phone verification)
+  DO \$\$
+  BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'one_time_token_type' AND typnamespace = (SELECT oid FROM pg_namespace WHERE nspname = 'auth')) THEN
+      CREATE TYPE auth.one_time_token_type AS ENUM (
+        'confirmation_token',
+        'reauthentication_token',
+        'recovery_token',
+        'email_change_token_new',
+        'email_change_token_current',
+        'phone_change_token'
+      );
+    END IF;
+  END
+  \$\$;
+
+  CREATE TABLE IF NOT EXISTS auth.one_time_tokens (
+      id uuid NOT NULL PRIMARY KEY,
+      user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+      token_type auth.one_time_token_type NOT NULL,
+      token_hash text NOT NULL CHECK (length(token_hash) > 0),
+      relates_to text NOT NULL,
+      created_at timestamp without time zone DEFAULT now() NOT NULL,
+      updated_at timestamp without time zone DEFAULT now() NOT NULL
+  );
+  CREATE INDEX IF NOT EXISTS one_time_tokens_user_id_token_type_idx ON auth.one_time_tokens (user_id, token_type);
+  CREATE INDEX IF NOT EXISTS one_time_tokens_relates_to_idx ON auth.one_time_tokens (relates_to);
+
   -- Grant permissions to auth admin
   GRANT ALL PRIVILEGES ON SCHEMA auth TO supabase_auth_admin;
   GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA auth TO supabase_auth_admin;
