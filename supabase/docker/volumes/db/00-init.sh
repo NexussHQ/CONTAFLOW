@@ -263,9 +263,9 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
       session_id uuid NOT NULL REFERENCES auth.sessions(id) ON DELETE CASCADE,
       created_at timestamp with time zone NOT NULL,
       updated_at timestamp with time zone NOT NULL,
-      authentication_method text NOT NULL
+      authentication_method text NOT NULL,
+      CONSTRAINT mfa_amr_claims_session_id_authentication_method_pkey UNIQUE (session_id, authentication_method)
   );
-  CREATE UNIQUE INDEX IF NOT EXISTS amr_id_pk ON auth.mfa_amr_claims (session_id, authentication_method);
 
   -- Grant permissions to auth admin
   GRANT ALL PRIVILEGES ON SCHEMA auth TO supabase_auth_admin;
