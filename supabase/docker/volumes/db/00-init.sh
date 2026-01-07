@@ -8,6 +8,9 @@ echo "Creating Roles..."
 psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
   DO \$\$
   BEGIN
+    -- Ensure postgres has SUPERUSER privileges to run CREATE EXTENSION and hooks
+    ALTER ROLE postgres WITH SUPERUSER;
+
     IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'anon') THEN
       CREATE ROLE anon NOLOGIN NOINHERIT;
     END IF;
@@ -291,6 +294,20 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
   
   -- Also transfer sequence ownership for refresh_tokens
   ALTER SEQUENCE auth.refresh_tokens_id_seq OWNER TO supabase_auth_admin;
+  
+  -- CRITICAL: Create auth.uid() and auth.role() functions for RLS policies
+  -- These functions read JWT claims set by PostgREST at runtime
+  CREATE OR REPLACE FUNCTION auth.uid() RETURNS uuid AS \$\$
+    SELECT NULLIF(current_setting('request.jwt.claim.sub', true), '')::uuid;
+  \$\$ LANGUAGE sql STABLE;
+  
+  CREATE OR REPLACE FUNCTION auth.role() RETURNS text AS \$\$
+    SELECT NULLIF(current_setting('request.jwt.claim.role', true), '');
+  \$\$ LANGUAGE sql STABLE;
+  
+  -- Grant execute permissions on these functions
+  GRANT EXECUTE ON FUNCTION auth.uid() TO anon, authenticated, service_role;
+  GRANT EXECUTE ON FUNCTION auth.role() TO anon, authenticated, service_role;
 EOSQL
 
 # 3. Grant supabase_admin access to public schema (for Studio table creation)
