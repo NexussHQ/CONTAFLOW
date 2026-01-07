@@ -308,10 +308,6 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
   -- Grant execute permissions on these functions
   GRANT EXECUTE ON FUNCTION auth.uid() TO anon, authenticated, service_role;
   GRANT EXECUTE ON FUNCTION auth.role() TO anon, authenticated, service_role;
-  
-  -- CRITICAL FIX: Transfer ownership to supabase_auth_admin so GoTrue can replace these functions during migrations
-  ALTER FUNCTION auth.uid() OWNER TO supabase_auth_admin;
-  ALTER FUNCTION auth.role() OWNER TO supabase_auth_admin;
 EOSQL
 
 # 3. Grant supabase_admin access to public schema (for Studio table creation)
