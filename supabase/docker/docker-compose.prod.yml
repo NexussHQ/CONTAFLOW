@@ -287,7 +287,7 @@ services:
       - ./volumes/db/realtime.sql:/docker-entrypoint-initdb.d/05-realtime.sql
       - ./volumes/db/webhooks.sql:/docker-entrypoint-initdb.d/z-webhooks.sql
       - ./volumes/db/schema.sql:/docker-entrypoint-initdb.d/99-schema.sql
-      - db-data-v33:/var/lib/postgresql/data
+      - db-data-v36:/var/lib/postgresql/data
       - db-config:/etc/postgresql-custom
     healthcheck:
       test: [ "CMD", "pg_isready", "-U", "postgres", "-h", "localhost" ]
@@ -308,7 +308,7 @@ services:
       POSTGRES_USER: postgres
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXP: ${JWT_EXPIRY:-3600}
-    command: [ "postgres", "-c", "config_file=/etc/postgresql/postgresql.conf", "-c", "log_min_messages=fatal" ]
+    command: [ "postgres", "-c", "config_file=/etc/postgresql/postgresql.conf", "-c", "log_min_messages=fatal", "-c", "max_connections=500" ]
 
   vector:
     image: timberio/vector:0.28.1-alpine
@@ -363,7 +363,7 @@ services:
     command: [ "/bin/sh", "-c", "/app/bin/migrate && /app/bin/supavisor eval \"$$(cat /etc/pooler/pooler.exs)\" && /app/bin/server" ]
 
 volumes:
-  db-data-v33:
+  db-data-v36:
   db-config:
 
 
