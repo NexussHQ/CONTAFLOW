@@ -77,8 +77,7 @@ END $$;
 -- This file contains ONLY the application-specific tables.
 -- Authentication tables (auth.users) are managed by Supabase standard migrations.
 
--- Ensure extensions required for the app (if not default)
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+-- Note: uuid-ossp not needed - using gen_random_uuid() which is built-in to PostgreSQL 13+
 
 
 -- Tabla: fichas (Ficha Maestra)

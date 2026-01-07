@@ -8,6 +8,9 @@ echo "Creating Roles..."
 psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
   DO \$\$
   BEGIN
+    -- Ensure postgres has SUPERUSER privileges to run CREATE EXTENSION and hooks
+    ALTER ROLE postgres WITH SUPERUSER;
+
     IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'anon') THEN
       CREATE ROLE anon NOLOGIN NOINHERIT;
     END IF;
