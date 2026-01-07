@@ -51,29 +51,11 @@ export async function POST(request: NextRequest) {
     // Paso 2: Crear el perfil y las columnas Kanban usando la función RPC
     // Esta función tiene SECURITY DEFINER, por lo que puede insertar
     // incluso si el usuario no está confirmado
+    // TODO: RPC logic currently disabled
+    /*
     try {
-      /*
-      console.log("Intentando llamar a RPC create_user_profile_and_columns")
-      const { data: rpcData, error: rpcError } = await supabase.rpc(
-        "create_user_profile_and_columns",
-        {
-          p_user_id: userId,
-          p_nombre: nombre,
-        }
-      )
-
-      console.log("RPC Response:", { rpcData, rpcError })
-
-      if (rpcError) {
-        console.error("Error al crear el perfil y las columnas Kanban:", rpcError)
-      } else {
-        console.log("Perfil y columnas Kanban creados exitosamente")
-      }
-      */
-      /*
-    } catch (rpcException) {
-      console.error("Excepción al llamar RPC:", rpcException)
-    }
+      // RPC call logic was here
+    } catch (e) { console.error(e) }
     */
 
       // Retornar éxito indicando que el usuario debe confirmar su email
