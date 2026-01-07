@@ -880,3 +880,20 @@ CREATE TRIGGER update_profiles_updated_at
 -- - Default Kanban columns for postventa (4 columns)
 
 EOSQL
+
+echo "Fixing PostgREST Permissions and Schemas..."
+psql --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
+  -- Ensure schemas exist so PostgREST schema cache loads
+  CREATE SCHEMA IF NOT EXISTS storage AUTHORIZATION supabase_storage_admin;
+  CREATE SCHEMA IF NOT EXISTS graphql_public;
+
+  -- Grant usage on schemas
+  GRANT USAGE ON SCHEMA storage TO postgres, anon, authenticated, service_role;
+  GRANT USAGE ON SCHEMA graphql_public TO postgres, anon, authenticated, service_role;
+  GRANT USAGE ON SCHEMA public TO postgres, anon, authenticated, service_role;
+
+  -- Grant access to tables (needed for RLS to work properly)
+  GRANT ALL ON ALL TABLES IN SCHEMA public TO postgres, anon, authenticated, service_role;
+  GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO postgres, anon, authenticated, service_role;
+  GRANT ALL ON ALL ROUTINES IN SCHEMA public TO postgres, anon, authenticated, service_role;
+EOSQL
