@@ -583,7 +583,7 @@ BEGIN
             ON CONFLICT (id) DO NOTHING;
     END;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, auth, extensions;
 
 -- 3. Crear función para insertar columnas Kanban con SECURITY DEFINER
 CREATE OR REPLACE FUNCTION insert_default_kanban_columns(p_user_id UUID)
@@ -605,7 +605,7 @@ BEGIN
     (p_user_id, 'postventa', 'Completado', 3, '#22c55e')
     ON CONFLICT DO NOTHING;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, auth, extensions;
 
 -- 4. Crear función combinada para registrar usuario completo
 CREATE OR REPLACE FUNCTION complete_user_registration(
@@ -620,7 +620,7 @@ BEGIN
     -- Insertar las columnas Kanban por defecto
     PERFORM insert_default_kanban_columns(p_user_id);
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, auth, extensions;
 
 -- 5. Crear función RPC que puede ser llamada desde el cliente
 CREATE OR REPLACE FUNCTION create_user_profile_and_columns(
@@ -651,7 +651,7 @@ BEGIN
 
     RETURN v_result;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, auth, extensions;
 
 -- 6. Otorgar permisos de ejecución a las funciones para los usuarios autenticados
 GRANT EXECUTE ON FUNCTION insert_user_profile(UUID, TEXT, TEXT) TO authenticated;
@@ -676,7 +676,7 @@ BEGIN
 
     RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, auth, extensions;
 
 CREATE TRIGGER on_auth_user_created
     AFTER INSERT ON auth.users
@@ -808,7 +808,7 @@ BEGIN
         RETURN OLD;
     END IF;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, auth, extensions;
 
 -- 6. Crear triggers para la función de verificación de subtareas
 -- Trigger cuando se inserta una subtarea
