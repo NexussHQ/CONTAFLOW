@@ -590,7 +590,7 @@ CREATE OR REPLACE FUNCTION insert_default_kanban_columns(p_user_id UUID)
 RETURNS VOID AS $$
 BEGIN
     -- Insertar columnas Kanban por defecto para Ventas
-    INSERT INTO columnas_kanban (usuario_id, tipo, nombre, posicion, color) VALUES
+    INSERT INTO columnas_kanban (user_id, tipo, nombre, posicion, color) VALUES
     (p_user_id, 'ventas', 'Por Contactar', 0, '#94a3b8'),
     (p_user_id, 'ventas', 'En Conversación', 1, '#3b82f6'),
     (p_user_id, 'ventas', 'Propuesta Enviada', 2, '#f59e0b'),
@@ -598,7 +598,7 @@ BEGIN
     ON CONFLICT DO NOTHING;
 
     -- Insertar columnas Kanban por defecto para Postventa/Operaciones
-    INSERT INTO columnas_kanban (usuario_id, tipo, nombre, posicion, color) VALUES
+    INSERT INTO columnas_kanban (user_id, tipo, nombre, posicion, color) VALUES
     (p_user_id, 'postventa', 'Onboarding', 0, '#8b5cf6'),
     (p_user_id, 'postventa', 'En Proceso', 1, '#3b82f6'),
     (p_user_id, 'postventa', 'Por Facturar', 2, '#f59e0b'),
