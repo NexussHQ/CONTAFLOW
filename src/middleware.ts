@@ -1,12 +1,33 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
+const DEMO_MODE = true
+
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({
     request: {
       headers: request.headers,
     },
   })
+
+  const isAuthRoute = request.nextUrl.pathname.startsWith('/dashboard')
+  const isPublicRoute = ['/login', '/register'].some(path =>
+    request.nextUrl.pathname.startsWith(path)
+  )
+
+  if (DEMO_MODE) {
+    const demoCookie = request.cookies.get('demo_session')
+    
+    if (!demoCookie && isAuthRoute) {
+      return NextResponse.redirect(new URL('/login', request.url))
+    }
+    
+    if (demoCookie && isPublicRoute) {
+      return NextResponse.redirect(new URL('/dashboard', request.url))
+    }
+    
+    return response
+  }
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -55,12 +76,6 @@ export async function middleware(request: NextRequest) {
   )
 
   const { data: { session } } = await supabase.auth.getSession()
-
-  // Redirigir a login si no hay sesión en rutas protegidas
-  const isAuthRoute = request.nextUrl.pathname.startsWith('/dashboard')
-  const isPublicRoute = ['/login', '/register'].some(path =>
-    request.nextUrl.pathname.startsWith(path)
-  )
 
   if (!session && isAuthRoute) {
     return NextResponse.redirect(new URL('/login', request.url))

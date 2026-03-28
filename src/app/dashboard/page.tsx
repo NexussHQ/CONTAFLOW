@@ -9,6 +9,8 @@ import Link from "next/link"
 import { createClient } from "@/lib/supabase/client"
 import type { Ficha } from "@/types"
 import { formatDate } from "@/lib/utils"
+import { DEMO_MODE, isDemoSession, getDemoUser } from "@/lib/demo"
+import { demoFichas, demoTasks, demoTimeline, getDemoStats, demoKanbanColumns } from "@/lib/demo-data"
 
 interface Task {
   id: string
@@ -43,8 +45,34 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    cargarDatos()
+    if (DEMO_MODE && isDemoSession()) {
+      cargarDatosDemo()
+    } else {
+      cargarDatos()
+    }
   }, [])
+
+  const cargarDatosDemo = async () => {
+    try {
+      setLoading(true)
+      await new Promise(resolve => setTimeout(resolve, 500))
+      
+      const demoStats = getDemoStats()
+      setStats({
+        totalFichas: demoStats.totalFichas,
+        clientes: demoStats.totalClientes,
+        prospectos: demoStats.totalProspectos,
+        tareasPendientes: demoStats.tareasPendientes,
+      })
+      
+      setTareasAltas(demoTasks.filter(t => t.priority === 'high' && t.status === 'pending'))
+      setTareasHoy(demoTasks.filter(t => t.status === 'pending').slice(0, 5))
+      setFichasRecientes(demoFichas.slice(0, 5))
+      setActividadReciente(demoTimeline.slice(0, 3))
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const cargarDatos = async () => {
     try {
@@ -52,7 +80,6 @@ export default function DashboardPage() {
       const supabase = createClient()
       const today = new Date().toISOString().split('T')[0]
 
-      // Cargar estadísticas de fichas
       const { data: fichasData } = await supabase
         .from('fichas')
         .select('tipo')
@@ -68,7 +95,6 @@ export default function DashboardPage() {
         }))
       }
 
-      // Cargar tareas pendientes count
       const { count: tasksCount } = await supabase
         .from('tasks')
         .select('*', { count: 'exact', head: true })
@@ -78,7 +104,6 @@ export default function DashboardPage() {
         setStats(prev => ({ ...prev, tareasPendientes: tasksCount }))
       }
 
-      // Cargar tareas de alta prioridad
       const { data: highTasks } = await supabase
         .from('tasks')
         .select('*, fichas(id, nombre)')
@@ -91,7 +116,6 @@ export default function DashboardPage() {
         setTareasAltas(highTasks)
       }
 
-      // Cargar tareas para hoy y vencidas
       const { data: todayTasks } = await supabase
         .from('tasks')
         .select('*, fichas(id, nombre)')
@@ -104,7 +128,6 @@ export default function DashboardPage() {
         setTareasHoy(todayTasks)
       }
 
-      // Cargar fichas recientes
       const { data: recentFichas } = await supabase
         .from('fichas')
         .select('*')
@@ -115,7 +138,6 @@ export default function DashboardPage() {
         setFichasRecientes(recentFichas)
       }
 
-      // Cargar últimas actividades del timeline
       const { data: timelineData } = await supabase
         .from('timeline')
         .select('*, fichas(nombre)')
@@ -133,6 +155,12 @@ export default function DashboardPage() {
   }
 
   const toggleTask = async (taskId: string) => {
+    if (DEMO_MODE) {
+      setTareasAltas(prev => prev.filter(t => t.id !== taskId))
+      setTareasHoy(prev => prev.filter(t => t.id !== taskId))
+      return
+    }
+    
     const supabase = createClient()
     await supabase
       .from('tasks')
@@ -142,13 +170,22 @@ export default function DashboardPage() {
     cargarDatos()
   }
 
+  const user = DEMO_MODE ? getDemoUser() : null
+
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold mb-2">Focus Day</h1>
-        <p className="text-muted-foreground">
-          {new Date().toLocaleDateString('es-EC', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold mb-2">Focus Day</h1>
+          <p className="text-muted-foreground">
+            {new Date().toLocaleDateString('es-EC', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+          </p>
+        </div>
+        {DEMO_MODE && user && (
+          <Badge variant="outline" className="text-sm">
+            Modo Demo - {user.name}
+          </Badge>
+        )}
       </div>
 
       {/* Stats */}
@@ -214,7 +251,9 @@ export default function DashboardPage() {
             <CardDescription>Tareas que necesitan atención urgente</CardDescription>
           </CardHeader>
           <CardContent>
-            {tareasAltas.length === 0 ? (
+            {loading ? (
+              <p className="text-center text-muted-foreground py-4">Cargando...</p>
+            ) : tareasAltas.length === 0 ? (
               <p className="text-center text-muted-foreground py-4">
                 🎉 No tienes tareas de alta prioridad
               </p>
@@ -268,7 +307,9 @@ export default function DashboardPage() {
             <CardDescription>Tareas vencidas o para completar hoy</CardDescription>
           </CardHeader>
           <CardContent>
-            {tareasHoy.length === 0 ? (
+            {loading ? (
+              <p className="text-center text-muted-foreground py-4">Cargando...</p>
+            ) : tareasHoy.length === 0 ? (
               <p className="text-center text-muted-foreground py-4">
                 ✅ No tienes tareas para hoy
               </p>
@@ -356,7 +397,9 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {fichasRecientes.map((ficha) => (
+              {loading ? (
+                <p className="text-center text-muted-foreground py-4">Cargando...</p>
+              ) : fichasRecientes.map((ficha) => (
                 <Link
                   key={ficha.id}
                   href={`/ficha/${ficha.id}`}
@@ -378,7 +421,7 @@ export default function DashboardPage() {
                   </Badge>
                 </Link>
               ))}
-              {fichasRecientes.length === 0 && (
+              {!loading && fichasRecientes.length === 0 && (
                 <p className="text-center text-muted-foreground py-4">
                   No hay contactos aún
                 </p>
@@ -403,7 +446,9 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {actividadReciente.map((event) => (
+              {loading ? (
+                <p className="text-center text-muted-foreground py-4">Cargando...</p>
+              ) : actividadReciente.map((event) => (
                 <div
                   key={event.id}
                   className="flex items-start gap-3 p-3 border rounded-lg"
@@ -431,7 +476,7 @@ export default function DashboardPage() {
                   </div>
                 </div>
               ))}
-              {actividadReciente.length === 0 && (
+              {!loading && actividadReciente.length === 0 && (
                 <p className="text-center text-muted-foreground py-4">
                   No hay actividad reciente
                 </p>

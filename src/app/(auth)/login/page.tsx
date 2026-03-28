@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
@@ -12,8 +12,15 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { useToast } from "@/components/ui/use-toast"
-import { supabase } from "@/lib/supabase/client"
 import { loginSchema, type LoginInput } from "@/lib/validations"
+
+const DEMO_MODE = true
+const DEMO_USER = {
+  email: "demo@contaflow.app",
+  password: "demo123",
+  name: "Usuario Demo",
+  id: "demo-user-001"
+}
 
 export default function LoginPage() {
   const router = useRouter()
@@ -28,33 +35,62 @@ export default function LoginPage() {
     resolver: zodResolver(loginSchema),
   })
 
+  useEffect(() => {
+    if (DEMO_MODE) {
+      const demoSession = localStorage.getItem("demo_session")
+      if (demoSession) {
+        router.push("/dashboard")
+      }
+    }
+  }, [router])
+
   const onSubmit = async (data: LoginInput) => {
     setLoading(true)
-    try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email: data.email,
-        password: data.password,
-      })
-
-      if (error) {
+    
+    if (DEMO_MODE) {
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      
+      if (data.email === DEMO_USER.email && data.password === DEMO_USER.password) {
+        localStorage.setItem("demo_session", JSON.stringify({
+          user: DEMO_USER,
+          expires: Date.now() + (7 * 24 * 60 * 60 * 1000)
+        }))
+        
+        document.cookie = `demo_session=${JSON.stringify({user: DEMO_USER})}; path=/; max-age=${7 * 24 * 60 * 60}`
+        
         toast({
-          variant: "destructive",
-          title: "Error al iniciar sesión",
-          description: error.message,
+          title: "Modo Demo",
+          description: "Sesión iniciada en modo demo",
         })
-      } else {
         router.push("/dashboard")
         router.refresh()
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Credenciales incorrectas",
+          description: "Usa las credenciales de demo o regístrate para una cuenta real",
+        })
       }
-    } catch (error) {
+      setLoading(false)
+      return
+    }
+
+    const { error } = await supabase.auth.signInWithPassword({
+      email: data.email,
+      password: data.password,
+    })
+
+    if (error) {
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "Ocurrió un error inesperado",
+        title: "Error al iniciar sesión",
+        description: error.message,
       })
-    } finally {
-      setLoading(false)
+    } else {
+      router.push("/dashboard")
+      router.refresh()
     }
+    setLoading(false)
   }
 
   return (
@@ -62,10 +98,17 @@ export default function LoginPage() {
       <CardHeader className="text-center">
         <CardTitle className="text-2xl font-bold">Iniciar Sesión</CardTitle>
         <CardDescription>
-          Ingresa tus credenciales para acceder a LeadFlow
+          {DEMO_MODE ? "Modo Demo - Usa las credenciales de abajo" : "Ingresa tus credenciales para acceder a LeadFlow"}
         </CardDescription>
       </CardHeader>
       <CardContent>
+        {DEMO_MODE && (
+          <div className="mb-4 p-3 bg-muted rounded-lg text-sm">
+            <p className="font-medium mb-1">Credenciales Demo:</p>
+            <p>Email: <code className="bg-muted-foreground/20 px-1 rounded">{DEMO_USER.email}</code></p>
+            <p>Contraseña: <code className="bg-muted-foreground/20 px-1 rounded">{DEMO_USER.password}</code></p>
+          </div>
+        )}
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
@@ -73,6 +116,7 @@ export default function LoginPage() {
               id="email"
               type="email"
               placeholder="tu@email.com"
+              defaultValue={DEMO_MODE ? DEMO_USER.email : ""}
               {...register("email")}
               disabled={loading}
             />
@@ -86,6 +130,8 @@ export default function LoginPage() {
             <Input
               id="password"
               type="password"
+              placeholder="••••••••"
+              defaultValue={DEMO_MODE ? DEMO_USER.password : ""}
               {...register("password")}
               disabled={loading}
             />
@@ -101,16 +147,18 @@ export default function LoginPage() {
                 Iniciando...
               </>
             ) : (
-              "Iniciar Sesión"
+              DEMO_MODE ? "Entrar en Modo Demo" : "Iniciar Sesión"
             )}
           </Button>
 
-          <p className="text-center text-sm text-muted-foreground">
-            ¿No tienes cuenta?{" "}
-            <Link href="/register" className="text-primary hover:underline">
-              Regístrate
-            </Link>
-          </p>
+          {!DEMO_MODE && (
+            <p className="text-center text-sm text-muted-foreground">
+              ¿No tienes cuenta?{" "}
+              <Link href="/register" className="text-primary hover:underline">
+                Regístrate
+              </Link>
+            </p>
+          )}
         </form>
       </CardContent>
     </Card>
