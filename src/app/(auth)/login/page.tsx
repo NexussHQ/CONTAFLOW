@@ -13,19 +13,15 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { useToast } from "@/components/ui/use-toast"
 import { loginSchema, type LoginInput } from "@/lib/validations"
+import { DEMO_USER } from "@/lib/demo"
 
 const DEMO_MODE = true
-const DEMO_USER = {
-  email: "demo@contaflow.app",
-  password: "demo123",
-  name: "Usuario Demo",
-  id: "demo-user-001"
-}
 
 export default function LoginPage() {
   const router = useRouter()
   const { toast } = useToast()
   const [loading, setLoading] = useState(false)
+  const [mounted, setMounted] = useState(false)
 
   const {
     register,
@@ -36,10 +32,11 @@ export default function LoginPage() {
   })
 
   useEffect(() => {
+    setMounted(true)
     if (DEMO_MODE) {
-      const demoSession = localStorage.getItem("demo_session")
-      if (demoSession) {
-        router.push("/dashboard")
+      const session = localStorage.getItem("demo_session")
+      if (session) {
+        router.replace("/dashboard")
       }
     }
   }, [router])
@@ -56,14 +53,11 @@ export default function LoginPage() {
           expires: Date.now() + (7 * 24 * 60 * 60 * 1000)
         }))
         
-        document.cookie = `demo_session=${JSON.stringify({user: DEMO_USER})}; path=/; max-age=${7 * 24 * 60 * 60}`
-        
         toast({
           title: "Modo Demo",
           description: "Sesión iniciada en modo demo",
         })
         router.push("/dashboard")
-        router.refresh()
       } else {
         toast({
           variant: "destructive",
@@ -91,6 +85,18 @@ export default function LoginPage() {
       router.refresh()
     }
     setLoading(false)
+  }
+
+  if (!mounted) {
+    return (
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-center">
+            <Loader2 className="h-6 w-6 animate-spin" />
+          </div>
+        </CardContent>
+      </Card>
+    )
   }
 
   return (
