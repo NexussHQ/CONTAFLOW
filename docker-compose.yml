@@ -1,0 +1,24 @@
+# CONTAFLOW - Desarrollo Local
+# Ejecutar: docker-compose up -d
+# Luego accede a http://localhost:3000
+
+name: contaflow
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: contaflow-app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      # Configurar estas variables指向tu Appwrite VPS
+      NEXT_PUBLIC_APPWRITE_URL: ${NEXT_PUBLIC_APPWRITE_URL}
+      NEXT_PUBLIC_APPWRITE_PROJECT_ID: ${NEXT_PUBLIC_APPWRITE_PROJECT_ID}
+      NEXT_PUBLIC_APPWRITE_DATABASE_ID: ${NEXT_PUBLIC_APPWRITE_DATABASE_ID}
+      APPWRITE_API_KEY: ${APPWRITE_API_KEY}
+    env_file:
+      - .env.local

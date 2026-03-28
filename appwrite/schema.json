@@ -1,0 +1,159 @@
+{
+  "name": "Contaflow",
+  "id": "contaflow",
+  "collections": [
+    {
+      "name": "profiles",
+      "id": "profiles",
+      "attributes": [
+        { "key": "id", "type": "string", "size": 36, "required": true },
+        { "key": "full_name", "type": "string", "size": 255, "required": false },
+        { "key": "avatar_url", "type": "string", "size": 500, "required": false },
+        { "key": "company_name", "type": "string", "size": 255, "required": false },
+        { "key": "created_at", "type": "datetime", "required": true },
+        { "key": "updated_at", "type": "datetime", "required": true }
+      ],
+      "indexes": [
+        { "key": "idx_profiles_id", "type": "key", "attributes": ["id"], "unique": true }
+      ]
+    },
+    {
+      "name": "fichas",
+      "id": "fichas",
+      "attributes": [
+        { "key": "id", "type": "string", "size": 36, "required": true },
+        { "key": "user_id", "type": "string", "size": 36, "required": true },
+        { "key": "tipo", "type": "string", "size": 20, "required": true },
+        { "key": "nombre", "type": "string", "size": 200, "required": true },
+        { "key": "ruc", "type": "string", "size": 13, "required": false },
+        { "key": "telefono", "type": "string", "size": 20, "required": false },
+        { "key": "email", "type": "string", "size": 255, "required": false },
+        { "key": "relacion", "type": "string", "size": 20, "required": true },
+        { "key": "campos_personalizados", "type": "string", "size": 10000, "required": false },
+        { "key": "etapa_ventas", "type": "string", "size": 50, "required": false },
+        { "key": "etapa_postventa", "type": "string", "size": 50, "required": false },
+        { "key": "creado_at", "type": "datetime", "required": true },
+        { "key": "actualizado_at", "type": "datetime", "required": true }
+      ],
+      "indexes": [
+        { "key": "idx_fichas_user", "type": "key", "attributes": ["user_id"] },
+        { "key": "idx_fichas_tipo", "type": "key", "attributes": ["tipo"] }
+      ]
+    },
+    {
+      "name": "tasks",
+      "id": "tasks",
+      "attributes": [
+        { "key": "id", "type": "string", "size": 36, "required": true },
+        { "key": "user_id", "type": "string", "size": 36, "required": true },
+        { "key": "ficha_id", "type": "string", "size": 36, "required": false },
+        { "key": "title", "type": "string", "size": 500, "required": true },
+        { "key": "description", "type": "string", "size": 5000, "required": false },
+        { "key": "priority", "type": "string", "size": 10, "required": true },
+        { "key": "status", "type": "string", "size": 20, "required": true },
+        { "key": "due_date", "type": "string", "size": 10, "required": false },
+        { "key": "due_time", "type": "string", "size": 10, "required": false },
+        { "key": "created_at", "type": "datetime", "required": true },
+        { "key": "completed_at", "type": "datetime", "required": false }
+      ],
+      "indexes": [
+        { "key": "idx_tasks_user", "type": "key", "attributes": ["user_id"] },
+        { "key": "idx_tasks_ficha", "type": "key", "attributes": ["ficha_id"] },
+        { "key": "idx_tasks_status", "type": "key", "attributes": ["status"] },
+        { "key": "idx_tasks_due", "type": "key", "attributes": ["due_date"] }
+      ]
+    },
+    {
+      "name": "subtasks",
+      "id": "subtasks",
+      "attributes": [
+        { "key": "id", "type": "string", "size": 36, "required": true },
+        { "key": "task_id", "type": "string", "size": 36, "required": true },
+        { "key": "title", "type": "string", "size": 500, "required": true },
+        { "key": "description", "type": "string", "size": 5000, "required": false },
+        { "key": "completed", "type": "boolean", "required": true },
+        { "key": "order_index", "type": "integer", "required": true },
+        { "key": "created_at", "type": "datetime", "required": true },
+        { "key": "completed_at", "type": "datetime", "required": false }
+      ],
+      "indexes": [
+        { "key": "idx_subtasks_task", "type": "key", "attributes": ["task_id"] },
+        { "key": "idx_subtasks_completed", "type": "key", "attributes": ["completed"] }
+      ]
+    },
+    {
+      "name": "timeline",
+      "id": "timeline",
+      "attributes": [
+        { "key": "id", "type": "string", "size": 36, "required": true },
+        { "key": "ficha_id", "type": "string", "size": 36, "required": true },
+        { "key": "user_id", "type": "string", "size": 36, "required": true },
+        { "key": "tipo", "type": "string", "size": 50, "required": true },
+        { "key": "titulo", "type": "string", "size": 200, "required": false },
+        { "key": "contenido", "type": "string", "size": 10000, "required": false },
+        { "key": "fecha", "type": "datetime", "required": true }
+      ],
+      "indexes": [
+        { "key": "idx_timeline_ficha", "type": "key", "attributes": ["ficha_id"] },
+        { "key": "idx_timeline_fecha", "type": "key", "attributes": ["fecha"] }
+      ]
+    },
+    {
+      "name": "kanban_columns",
+      "id": "kanban_columns",
+      "attributes": [
+        { "key": "id", "type": "string", "size": 36, "required": true },
+        { "key": "user_id", "type": "string", "size": 36, "required": true },
+        { "key": "tipo", "type": "string", "size": 20, "required": true },
+        { "key": "nombre", "type": "string", "size": 100, "required": true },
+        { "key": "posicion", "type": "integer", "required": true },
+        { "key": "color", "type": "string", "size": 7, "required": true }
+      ],
+      "indexes": [
+        { "key": "idx_kanban_user", "type": "key", "attributes": ["user_id"] },
+        { "key": "idx_kanban_tipo", "type": "key", "attributes": ["tipo"] }
+      ]
+    },
+    {
+      "name": "etiquetas",
+      "id": "etiquetas",
+      "attributes": [
+        { "key": "id", "type": "string", "size": 36, "required": true },
+        { "key": "user_id", "type": "string", "size": 36, "required": true },
+        { "key": "nombre", "type": "string", "size": 50, "required": true },
+        { "key": "color", "type": "string", "size": 7, "required": true }
+      ],
+      "indexes": [
+        { "key": "idx_etiquetas_user", "type": "key", "attributes": ["user_id"] }
+      ]
+    },
+    {
+      "name": "ficha_etiquetas",
+      "id": "ficha_etiquetas",
+      "attributes": [
+        { "key": "id", "type": "string", "size": 36, "required": true },
+        { "key": "ficha_id", "type": "string", "size": 36, "required": true },
+        { "key": "etiqueta_id", "type": "string", "size": 36, "required": true }
+      ],
+      "indexes": []
+    },
+    {
+      "name": "custom_fields",
+      "id": "custom_fields",
+      "attributes": [
+        { "key": "id", "type": "string", "size": 36, "required": true },
+        { "key": "user_id", "type": "string", "size": 36, "required": true },
+        { "key": "field_key", "type": "string", "size": 100, "required": true },
+        { "key": "field_label", "type": "string", "size": 200, "required": true },
+        { "key": "field_type", "type": "string", "size": 20, "required": true },
+        { "key": "options", "type": "string", "size": 5000, "required": false },
+        { "key": "is_required", "type": "boolean", "required": true },
+        { "key": "position", "type": "integer", "required": true },
+        { "key": "created_at", "type": "datetime", "required": true }
+      ],
+      "indexes": [
+        { "key": "idx_custom_fields_user", "type": "key", "attributes": ["user_id"] }
+      ]
+    }
+  ]
+}
